@@ -51,6 +51,7 @@ public class Muckracker  {
     }
 
     /**
+     * TODO this is probably going to change. Since the validation logic is currently broken in the client
      * From what I've seen map creation doesn't get too crazy so as a start:
      *  if we are red go east
      *  if we are blue go west
@@ -107,14 +108,14 @@ public class Muckracker  {
     }
 
     private void goHome(MapLocation homeBase) throws GameActionException {
-        MapLocation[] path = PathFinder.findPath(homeBase);
+        Direction[] path = PathFinder.findPath(homeBase, robotController);
         while (!seesHome()) {
-            for (MapLocation location : path ) {
-                if (robotController.canMove(location.directionTo(location))) {
-                    robotController.move(location.directionTo(location));
+            for (Direction direction : path ) {
+                if (robotController.canMove(direction)) {
+                    robotController.move(direction);
                     Clock.yield();
                 } else {
-                    path = PathFinder.findPath(homeBase);
+                    path = PathFinder.findPath(homeBase, robotController);
                 }
             }
         }
@@ -157,8 +158,10 @@ public class Muckracker  {
         robotController.setFlag(location.x + location.y);
     }
 
-    //TODO choose which direction to go (N/S || E/W)
-    private void bfs() {
-        //560 dont fail me now
+    //Magic directions?
+    private void bfs() throws GameActionException {
+        while (!seesEnemyHQ()) {
+
+        }
     }
 }

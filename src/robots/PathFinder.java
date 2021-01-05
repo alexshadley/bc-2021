@@ -1,6 +1,8 @@
 package robots;
 
+import battlecode.common.Direction;
 import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
 
 /**
  * Figured it might be nice to have this in its own class
@@ -9,7 +11,7 @@ import battlecode.common.MapLocation;
 public class PathFinder {
 
     // Very good impl
-    public static MapLocation[] findPath(MapLocation destination){
+    public static Direction[] findPath(MapLocation destination, RobotController robotController){
         return null;
     }
 }
