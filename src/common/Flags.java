@@ -1,7 +1,5 @@
 package common;
 
-import java.util.Optional;
-
 public class Flags {
     final static int TYPE_WIDTH = 8;
     final static int TYPE_BITMASK = 0x0000ff;
