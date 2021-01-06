@@ -108,15 +108,13 @@ public class Muckracker  {
     }
 
     private void goHome(MapLocation homeBase) throws GameActionException {
-        Direction[] path = PathFinder.findPath(homeBase, robotController);
         while (!seesHome()) {
-            for (Direction direction : path ) {
-                if (robotController.canMove(direction)) {
-                    robotController.move(direction);
-                    Clock.yield();
-                } else {
-                    path = PathFinder.findPath(homeBase, robotController);
-                }
+            Direction direction = PathFinder.findPath(homeBase, robotController);
+            if (robotController.canMove(direction)) {
+                robotController.move(direction);
+                Clock.yield();
+            } else {
+                direction = PathFinder.findPath(homeBase, robotController);
             }
         }
     }
