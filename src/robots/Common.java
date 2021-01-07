@@ -65,4 +65,21 @@ public class Common {
         robotController.move(findPath(destination, robotController));
         Clock.yield();
     }
+
+    /**
+     * idk another one that takes a dir instead of a map location
+     * @param direction
+     * @param robotController
+     * @throws GameActionException
+     */
+    public static void move(Direction direction, RobotController robotController) throws GameActionException {
+        if (robotController.canMove(direction)) {
+            robotController.move(direction);
+            Clock.yield();
+        } else {
+            direction = findPath(new MapLocation(direction.dx, direction.dy), robotController);
+            robotController.move(direction);
+            Clock.yield();
+        }
+    }
 }
