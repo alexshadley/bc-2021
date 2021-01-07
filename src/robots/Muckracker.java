@@ -171,14 +171,14 @@ public class Muckracker  {
             //Should we unroll?
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(robotController.getLocation().translate(1, 0), robotController);
+                    Common.move(Direction.EAST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             } else {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(robotController.getLocation().translate(-1, 0), robotController);
+                    Common.move(Direction.EAST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
@@ -197,14 +197,14 @@ public class Muckracker  {
 
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(robotController.getLocation().translate(1, 0), robotController);
+                    Common.move(Direction.WEST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             } else {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(robotController.getLocation().translate(-1, 0), robotController);
+                    Common.move(Direction.WEST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
