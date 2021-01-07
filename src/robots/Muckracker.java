@@ -159,7 +159,7 @@ public class Muckracker  {
         boolean goingEast = true;
         while (true) {
             while (!robotController.onTheMap(robotController.getLocation().translate(0, 6))) {
-                Common.move(robotController.getLocation().translate(0, 1), robotController);
+                Common.move(Direction.NORTH, robotController);
                 if (seesEnemyHQ()) {
                     return;
                 }
@@ -186,7 +186,7 @@ public class Muckracker  {
             }
 
             while (!robotController.onTheMap(robotController.getLocation().translate(0, -6))) {
-                Common.move(robotController.getLocation().translate(0, 1), robotController);
+                Common.move(Direction.SOUTH, robotController);
                 if (seesEnemyHQ()) {
                     return;
                 }
