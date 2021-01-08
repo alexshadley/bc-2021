@@ -39,14 +39,30 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
-        // This is the RobotController object. You use it to perform actions from this robot,
-        // and to get information on its current status.
+        System.out.println(rc.getType() + " created");
         RobotPlayer.rc = rc;
+
+        switch (rc.getType()) {
+            case ENLIGHTENMENT_CENTER:
+                final EnlightenmentCenter ec = new EnlightenmentCenter(rc);
+                ec.run();
+                break;
+
+            /*case POLITICIAN:
+                runPolitician();
+                break;
+
+            case SLANDERER:
+                runSlanderer();
+                break;
+
+            case MUCKRAKER:
+                runMuckraker();
+                break;*/
+        }
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
