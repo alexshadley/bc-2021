@@ -39,7 +39,7 @@ public strictfp class RobotPlayer {
 
     /** 
      * Slanderer brain logic
-     * If spot enemy... RUN! oh baby lord
+     * If spot enemy - RUN!
      *
      * @throws GaneActionException
      */
@@ -70,9 +70,10 @@ public strictfp class RobotPlayer {
         }
 
         // Try to move in opposite direction
-        MapLocation invEnemyLocation = new MapLocation( enemyLocation.x * -1, enemyLocation.y * -1 );
-        Direction movementDir = currLocation.directionTo( invEnemyLocation );
-        tryMove( movementDir );
+        if ( null != enemyLocation ) {
+            Direction movementDir = currLocation.directionTo( enemyLocation );
+            tryMove( movementDir.opposite() );
+        }
     }
 
     /**
