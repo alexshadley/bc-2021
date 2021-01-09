@@ -43,8 +43,8 @@ public class Pathfinding {
             return Direction.NORTH;
         } else if (dy > 0 && robotController.canMove(Direction.NORTHEAST)){
             return Direction.NORTHEAST;
-        } else if (dy > 0 && robotController.canMove(Direction.NORTHEAST)){
-            return Direction.NORTHEAST;
+        } else if (dy > 0 && robotController.canMove(Direction.NORTHWEST)){
+            return Direction.NORTHWEST;
         }
 
         if ( dy < 0 && robotController.canMove(Direction.SOUTH)) {
