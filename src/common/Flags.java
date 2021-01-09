@@ -32,6 +32,13 @@ public class Flags {
         return new int[] {x, y};
     }
 
+    /**
+     * Encodes two coordinates as an ENEMY_EC_FOUND Flag
+     *
+     * @param x enemy x coordinate, relative (must fit in 8 bits, not be negative)
+     * @param y enemy y coordinate, relative (must fit in 8 bits, not be negative)
+     * @return flag
+     */
     public static int encodeEnemyECFoundFlag(final int x, final int y) {
         return encodeFlag(
             Type.ENEMY_EC_FOUND,

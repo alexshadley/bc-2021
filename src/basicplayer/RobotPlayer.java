@@ -7,6 +7,7 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.Team;
+import common.Startup;
 
 /**
  * This is just examplefuncsplayer except ECs bid 1 each turn
@@ -42,6 +43,9 @@ public strictfp class RobotPlayer {
         System.out.println(rc.getType() + " created");
         RobotPlayer.rc = rc;
 
+        final Team enemyTeam = rc.getTeam().opponent();
+        final RobotInfo parent = Startup.getParent(rc);
+
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 final EnlightenmentCenter ec = new EnlightenmentCenter(rc);
@@ -54,11 +58,12 @@ public strictfp class RobotPlayer {
 
             case SLANDERER:
                 runSlanderer();
-                break;
+                break;*/
 
             case MUCKRAKER:
-                runMuckraker();
-                break;*/
+                final Muckracker muckracker = new Muckracker(rc, true, enemyTeam, parent);
+                muckracker.run();
+                break;
         }
 
         turnCount = 0;

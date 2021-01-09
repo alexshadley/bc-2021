@@ -7,12 +7,11 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
-import common.Directions;
+import common.CoordinateSystem;
+import common.Flags;
 import common.Flags.Type;
 
 public class EnlightenmentCenter {
-    private final RobotController rc;
-
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
         RobotType.SLANDERER,
@@ -37,30 +36,80 @@ public class EnlightenmentCenter {
         new TypeAndInfluence(RobotType.MUCKRAKER, 1)
     };
 
+    private final RobotController rc;
+    private final CoordinateSystem coordinateSystem;
+
+
     private int[] myRobots = new int[1000];
     private int robotCount = 0;
 
+    private int[] myScouts = new int[100];
+    private int scoutCount = 0;
+
+    private MapLocation[] enemyECs = new MapLocation[3];
+    private int enemyECCount = 0;
+
     public EnlightenmentCenter(final RobotController rc) {
         this.rc = rc;
+        this.coordinateSystem = new CoordinateSystem(rc.getLocation());
     }
 
     public void run() throws GameActionException {
         while (true) {
             final TypeAndInfluence next = getRobotToBuild(robotCount);
 
-            for (final Direction dir : Directions.directions) {
+            for (final Direction dir : Direction.allDirections()) {
                 if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
-                    myRobots[robotCount] = buildRobot(next.robotType, dir, next.influence).ID;
+                    final int robotId = buildRobot(next.robotType, dir, next.influence).ID;
+                    myRobots[robotCount] = robotId;
                     robotCount++;
+                    if (next.robotType == RobotType.MUCKRAKER) {
+                        myScouts[scoutCount] = robotId;
+                        scoutCount++;
+                    }
                     System.out.println("robot " + robotCount + " created: " + myRobots[robotCount - 1]);
                 }
             }
+
+            checkCommunications();
 
             Clock.yield();
         }
     }
 
-    public TypeAndInfluence getRobotToBuild(int robotCount) {
+    private void checkCommunications() {
+        for (int i = 0; i < scoutCount; i++) {
+            try {
+                final int flag = rc.getFlag(myScouts[i]);
+
+                if (Flags.getFlagType(flag) == Type.ENEMY_EC_FOUND) {
+                    final int[] coords = Flags.getEnemyECFoundInfo(flag);
+                    addEnemyEC(coordinateSystem.toAbsolute(coords[0], coords[1]));
+                }
+
+            } catch (final GameActionException e) {
+                System.out.println("Couldn't get scout flag: " + e);
+            }
+        }
+    }
+
+    /**
+     * Add enemy ec, deduping if this has already been found
+     */
+    private void addEnemyEC(final MapLocation enemyECLocation) {
+        for (int i = 0; i < enemyECCount; i++) {
+            if (enemyECLocation.equals(enemyECs[i])) {
+                return;
+            }
+        }
+
+        System.out.println("New enemy EC found: " + enemyECLocation);
+
+        enemyECs[enemyECCount] = enemyECLocation;
+        enemyECCount++;
+    }
+
+    private TypeAndInfluence getRobotToBuild(int robotCount) {
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {

@@ -1,11 +1,11 @@
-package robots;
+package common;
 
 import battlecode.common.*;
 
 /**
  * Holds static common funcs to be used across all robots
  */
-public class Common {
+public class Pathfinding {
 
     /**
      * Returns the next direction a robot should move
@@ -58,7 +58,7 @@ public class Common {
      * Makes a single move and yields the clocks
      * @param destination where to move to
      * @param robotController robot controller
-     * @throws GameActionException Should never be thrown, as {@link Common.findPath} checks
+     * @throws GameActionException Should never be thrown, as {@link Pathfinding.findPath} checks
      * if move is valid before committing
      */
     public static void move(MapLocation destination, RobotController robotController) throws GameActionException {

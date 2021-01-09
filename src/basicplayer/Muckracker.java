@@ -1,6 +1,9 @@
-package robots;
+package basicplayer;
 
 import battlecode.common.*;
+import common.CoordinateSystem;
+import common.Flags;
+import common.Pathfinding;
 
 /**
  * Muckrackers are the current class we use for scouting due to their sense of range of 40.
@@ -21,22 +24,24 @@ public class Muckracker  {
     private static final int SENSOR_R2 = 40;
     private static final int DETECT_R2 = 30;
 
-    private MapLocation homeBase;
+    private RobotInfo parent;
     private MapLocation enemyEC = null;
+
+    private CoordinateSystem coordinateSystem;
 
     Team enemyTeam = null;
 
-    Muckracker(RobotController robotController, Boolean isScout, Team enemyTeam, MapLocation homeBase) {
+    Muckracker(RobotController robotController, Boolean isScout, Team enemyTeam, RobotInfo parent) {
         this.robotController = robotController;
         this.isScout = isScout;
         this.enemyTeam = enemyTeam;
-        this.homeBase = homeBase;
+        this.parent = parent;
 
-        run();
+        this.coordinateSystem = new CoordinateSystem(parent.location);
     }
 
     // Main execution loop
-    private void run() {
+    public void run() {
         while (true) {
             if (isScout) {
                 try {
@@ -110,7 +115,7 @@ public class Muckracker  {
 
     private void goHome() throws GameActionException {
         while (!seesHome()) {
-            Direction direction = Common.findPath(homeBase, robotController);
+            Direction direction = Pathfinding.findPath(parent.location, robotController);
             robotController.move(direction);
             Clock.yield();
         }
@@ -149,8 +154,9 @@ public class Muckracker  {
     }
 
     private void setEnemyHQFlag(MapLocation location) throws GameActionException {
-        //TODO Update with actual flag
-        robotController.setFlag(location.x + location.y);
+        final int[] coords = coordinateSystem.toRelative(location);
+        System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
+        robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 
     //Magic directions?
@@ -159,7 +165,7 @@ public class Muckracker  {
         boolean goingEast = true;
         while (true) {
             while (!robotController.onTheMap(robotController.getLocation().translate(0, 6))) {
-                Common.move(Direction.NORTH, robotController);
+                Pathfinding.move(Direction.NORTH, robotController);
                 if (seesEnemyHQ()) {
                     return;
                 }
@@ -171,14 +177,14 @@ public class Muckracker  {
             //Should we unroll?
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(Direction.EAST, robotController);
+                    Pathfinding.move(Direction.EAST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             } else {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(Direction.EAST, robotController);
+                    Pathfinding.move(Direction.EAST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
@@ -186,7 +192,7 @@ public class Muckracker  {
             }
 
             while (!robotController.onTheMap(robotController.getLocation().translate(0, -6))) {
-                Common.move(Direction.SOUTH, robotController);
+                Pathfinding.move(Direction.SOUTH, robotController);
                 if (seesEnemyHQ()) {
                     return;
                 }
@@ -197,14 +203,14 @@ public class Muckracker  {
 
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(Direction.WEST, robotController);
+                    Pathfinding.move(Direction.WEST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             } else {
                 for (int i = 0; i < 12; i++) {
-                    Common.move(Direction.WEST, robotController);
+                    Pathfinding.move(Direction.WEST, robotController);
                     if (seesEnemyHQ()) {
                         return;
                     }
