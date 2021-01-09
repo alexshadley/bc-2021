@@ -122,11 +122,18 @@ public class Pathfinding {
      * Move in direction if can
      * Does nothing if cannot move
      * 
-     * 
+     * @param direction Direction to move in
+     * @param robotController controller for robot instance
+     * @return true if robot has moved
+     * @throws GameActionException
      */
-    public static void tryMove(Direction direction, RobotController robotController) throws GameActionException {
+    public static boolean tryMove(Direction direction, RobotController robotController) throws GameActionException {
+        boolean hasMoved = false;
         if (robotController.canMove(direction)) {
             robotController.move(direction);
+            hasMoved = true;
         }
+
+        return (hasMoved);
     }
 }

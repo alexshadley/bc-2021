@@ -2,6 +2,7 @@ package basicplayer;
 
 import battlecode.common.*;
 import common.Pathfinding;
+import common.Directions;
 
 /**
  * Slanderers
@@ -83,9 +84,14 @@ public class Slanderer {
         }
 
         // Try to move in opposite direction
+        boolean cannotMove = false;
         if ( null != enemyLocation ) {
             Direction movementDir = currLocation.directionTo( enemyLocation );
-            Pathfinding.tryMove( movementDir.opposite(), robotController );
+            cannotMove = Pathfinding.tryMove( movementDir.opposite(), robotController );
+        }
+
+        if ( null == enemyLocation || cannotMove ) {
+            Pathfinding.tryMove( Directions.getRandomDirection(), robotController );
         }
     }
 }
