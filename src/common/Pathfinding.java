@@ -101,4 +101,16 @@ public class Pathfinding {
             Clock.yield();
         }
     }
+
+    /**
+     * Move in direction if can
+     * Does nothing if cannot move
+     * 
+     * 
+     */
+    public static void tryMove(Direction direction, RobotController robotController) throws GameActionException {
+        if (robotController.canMove(direction)) {
+            robotController.move(direction);
+        }
+    }
 }

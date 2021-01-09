@@ -55,10 +55,12 @@ public strictfp class RobotPlayer {
             /*case POLITICIAN:
                 runPolitician();
                 break;
+            */
 
             case SLANDERER:
-                runSlanderer();
-                break;*/
+                final Slanderer slanderer = new Slanderer(rc);
+                slanderer.run();
+                break;
 
             case MUCKRAKER:
                 final Muckracker muckracker = new Muckracker(rc, true, enemyTeam, parent);
@@ -77,7 +79,6 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     //case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
                     case POLITICIAN:           runPolitician();          break;
-                    case SLANDERER:            runSlanderer();           break;
                     //case MUCKRAKER:            runMuckraker();           break;
                 }
 
