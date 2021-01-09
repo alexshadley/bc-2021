@@ -170,7 +170,7 @@ public class Muckracker  {
                 }
             }
 
-            //Check if we can go east still
+            //Check if we can go east, latches false
             goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(5, 0)));
 
             //Should we unroll?
