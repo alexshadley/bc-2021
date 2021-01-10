@@ -19,7 +19,12 @@ public class Muckracker  {
     private final RobotController robotController;
 
     //Could be enum in the future
+    private static enum MuckMode {
+        SCOUT,
+        MUCKMAKER
+    }
     private boolean isScout = true;
+    private MuckMode mode;
 
     private static final int ACTION_R2 = 12;
     private static final int SENSOR_R2 = 40;
@@ -37,6 +42,7 @@ public class Muckracker  {
         this.isScout = isScout;
         this.enemyTeam = enemyTeam;
         this.parent = parent;
+        this.mode = MuckMode.SCOUT;
 
         if (parent != null)
             this.coordinateSystem = new CoordinateSystem(parent.location);
@@ -45,17 +51,24 @@ public class Muckracker  {
     // Main execution loop
     public void run() throws GameActionException {
         while (true) {
-            if (isScout) {
-                try {
-                    goScouting();
-                    isScout = false;
-                } catch (GameActionException e) {
-                    System.out.println(e.getMessage());
+            try {
+                switch (mode) {
+                    case SCOUT:
+                        if (seesEnemyHQ()) {
+                            mode = MuckMode.MUCKMAKER;
+                        } else {
+                            goScouting();
+                        }
+                        break;
+                    case MUCKMAKER:
+                        liarLiarYourPantsAreOnFire();
+                        break;
+                    default:
+                        //do nothing
                 }
-            } else {
-                liarLiarYourPantsAreOnFire();
-                Clock.yield();
+            } catch (GameActionException e) {
             }
+            Clock.yield();
         }
     }
 
@@ -68,48 +81,30 @@ public class Muckracker  {
     private void goScouting() throws GameActionException {
         // if we are red go east
         if (enemyTeam.equals(Team.B)) {
-            while (!seesEnemyHQ()) {
-                if (robotController.canMove(Direction.EAST)) {
-                    robotController.move(Direction.EAST);
-                    Clock.yield();
-                } else if (robotController.canMove(Direction.NORTHEAST)) {
-                    robotController.move(Direction.NORTHEAST);
-                    Clock.yield();
-                } else if (robotController.canMove(Direction.SOUTHEAST)) {
-                    robotController.move(Direction.SOUTHEAST);
-                    Clock.yield();
-                } else {
-                }
-
-                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x+5, robotController.getLocation().y))) {
-                    scan();
-                }
+            if (robotController.canMove(Direction.EAST)) {
+                robotController.move(Direction.EAST);
+            } else if (robotController.canMove(Direction.NORTHEAST)) {
+                robotController.move(Direction.NORTHEAST);
+            } else if (robotController.canMove(Direction.SOUTHEAST)) {
+                robotController.move(Direction.SOUTHEAST);
             }
-            //goHome();
-            return;
+
+            if (!robotController.onTheMap(robotController.getLocation().translate(5, 0))) {
+                scan();
+            }
 
         } else {
-            // if we are blue go west
-            while (!seesEnemyHQ()) {
-                if (robotController.canMove(Direction.WEST)) {
-                    robotController.move(Direction.WEST);
-                    Clock.yield();
-                } else if (robotController.canMove(Direction.NORTHWEST)) {
-                    robotController.move(Direction.NORTHWEST);
-                    Clock.yield();
-                } else if (robotController.canMove(Direction.SOUTHWEST)) {
-                    robotController.move(Direction.SOUTHWEST);
-                    Clock.yield();
-                } else {
-                    //liarLiarYourPantsAreOnFire();
-                }
-
-                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x-5, robotController.getLocation().y))) {
-                    scan();
-                }
+            if (robotController.canMove(Direction.WEST)) {
+                robotController.move(Direction.WEST);
+            } else if (robotController.canMove(Direction.NORTHWEST)) {
+                robotController.move(Direction.NORTHWEST);
+            } else if (robotController.canMove(Direction.SOUTHWEST)) {
+                robotController.move(Direction.SOUTHWEST);
             }
-            //goHome();
-            return;
+
+            if (!robotController.onTheMap(robotController.getLocation().translate(-5, 0))) {
+                scan();
+            }
         }
     }
 
@@ -168,6 +163,7 @@ public class Muckracker  {
                 System.out.println("Scanning NORTH");
                 Pathfinding.move(Direction.NORTH, robotController);
                 if (seesEnemyHQ()) {
+                    mode = MuckMode.MUCKMAKER;
                     return;
                 }
             }
@@ -181,6 +177,7 @@ public class Muckracker  {
                     Pathfinding.move(Direction.EAST, robotController);
                     System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
+                        mode = MuckMode.MUCKMAKER;
                         return;
                     }
                 }
@@ -190,6 +187,7 @@ public class Muckracker  {
                     System.out.println("Scanning WEST");
 
                     if (seesEnemyHQ()) {
+                        mode = MuckMode.MUCKMAKER;
                         return;
                     }
                 }
@@ -199,6 +197,7 @@ public class Muckracker  {
                 Pathfinding.move(Direction.SOUTH, robotController);
                 System.out.println("Scanning SOUTH");
                 if (seesEnemyHQ()) {
+                    mode = MuckMode.MUCKMAKER;
                     return;
                 }
             }
@@ -211,6 +210,7 @@ public class Muckracker  {
                     Pathfinding.move(Direction.EAST, robotController);
                     System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
+                        mode = MuckMode.MUCKMAKER;
                         return;
                     }
                 }
@@ -219,6 +219,7 @@ public class Muckracker  {
                     Pathfinding.move(Direction.WEST, robotController);
                     System.out.println("Scanning WEST");
                     if (seesEnemyHQ()) {
+                        mode = MuckMode.MUCKMAKER;
                         return;
                     }
                 }
@@ -235,9 +236,9 @@ public class Muckracker  {
         for (RobotInfo info : infos) {
             if (info.type == RobotType.SLANDERER) {
                 robotController.expose(info.location);
+                return;
             }
         }
-
         Pathfinding.tryMove(Directions.getRandomDirection(), robotController);
     }
 }
