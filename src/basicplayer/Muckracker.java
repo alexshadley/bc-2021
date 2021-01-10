@@ -6,6 +6,9 @@ import common.Directions;
 import common.Flags;
 import common.Pathfinding;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
  * Muckrackers are the current class we use for scouting due to their sense of range of 40.
  * Stats:
@@ -21,9 +24,10 @@ public class Muckracker  {
     //Could be enum in the future
     private static enum MuckMode {
         SCOUT,
+        CHOKER,
+        SEARCH,
         MUCKMAKER
     }
-    private boolean isScout = true;
     private MuckMode mode;
 
     private static final int ACTION_R2 = 12;
@@ -34,12 +38,12 @@ public class Muckracker  {
     private MapLocation enemyEC = null;
 
     private CoordinateSystem coordinateSystem;
+    private MapLocation chokeSpot = null;
 
     Team enemyTeam = null;
 
-    public Muckracker(RobotController robotController, Boolean isScout, Team enemyTeam, RobotInfo parent) {
+    public Muckracker(RobotController robotController, Team enemyTeam, RobotInfo parent) {
         this.robotController = robotController;
-        this.isScout = isScout;
         this.enemyTeam = enemyTeam;
         this.parent = parent;
         this.mode = MuckMode.SCOUT;
@@ -61,7 +65,25 @@ public class Muckracker  {
                         }
                         break;
                     case MUCKMAKER:
-                        liarLiarYourPantsAreOnFire();
+                        if (canChoke()){
+                            mode = MuckMode.CHOKER;
+                        } else {
+                            liarLiarYourPantsAreOnFire();
+                        }
+                        break;
+                    case CHOKER:
+                        if (chokeSpot == null) {
+                            MapLocation[] openSpots = chokeSpots();
+                            if (openSpots == null) {
+                                mode = MuckMode.MUCKMAKER;
+                            } else {
+                                chokeSpot = openSpots[(int) (Math.random() % 4)];
+                            }
+                        }
+                        blackOutTheSunMyChildren();
+                        break;
+                    case SEARCH:
+                        scan();
                         break;
                     default:
                         //do nothing
@@ -90,7 +112,7 @@ public class Muckracker  {
             }
 
             if (!robotController.onTheMap(robotController.getLocation().translate(5, 0))) {
-                scan();
+                mode = MuckMode.SEARCH;
             }
 
         } else {
@@ -103,7 +125,7 @@ public class Muckracker  {
             }
 
             if (!robotController.onTheMap(robotController.getLocation().translate(-5, 0))) {
-                scan();
+                mode = MuckMode.SEARCH;
             }
         }
     }
@@ -123,12 +145,17 @@ public class Muckracker  {
      * @throws GameActionException Uh oh, we (I) broke something
      */
     private boolean seesEnemyHQ() throws GameActionException {
-        RobotInfo[] enemyRobots = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
-        for (RobotInfo robot : enemyRobots) {
+        RobotInfo[] robots = robotController.senseNearbyRobots(SENSOR_R2-10);
+        for (RobotInfo robot : robots) {
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                enemyEC = robot.location;
-                setEnemyHQFlag(enemyEC);
-                return true;
+                if (robot.getTeam() == enemyTeam) {
+                    enemyEC = robot.location;
+                    setEnemyHQFlag(enemyEC);
+                    return true;
+                } else {
+                    //Neutral EC
+                    return false;
+                }
             }
         }
         return false;
@@ -154,13 +181,18 @@ public class Muckracker  {
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 
+    // TODO Actual flag
+    private void setNeutralEC(MapLocation location, int conviction) throws GameActionException {
+        final int[] coords = coordinateSystem.toRelative(location);
+        robotController.setFlag(2);
+    }
+
     //Magic directions?
     // Go Scan NS to the East and then west
     private void scan() throws GameActionException {
         boolean goingEast = true;
         while (true) {
-            while (!robotController.onTheMap(robotController.getLocation().translate(0, 5))) {
-                System.out.println("Scanning NORTH");
+            while (robotController.onTheMap(robotController.getLocation().translate(0, 3))) {
                 Pathfinding.move(Direction.NORTH, robotController);
                 if (seesEnemyHQ()) {
                     mode = MuckMode.MUCKMAKER;
@@ -169,13 +201,12 @@ public class Muckracker  {
             }
 
             //Check if we can go east, latches false
-            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(5, 0)));
+            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(3, 0)));
 
             //Should we unroll?
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.EAST, robotController);
-                    System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
                         mode = MuckMode.MUCKMAKER;
                         return;
@@ -184,8 +215,6 @@ public class Muckracker  {
             } else {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.WEST, robotController);
-                    System.out.println("Scanning WEST");
-
                     if (seesEnemyHQ()) {
                         mode = MuckMode.MUCKMAKER;
                         return;
@@ -193,9 +222,8 @@ public class Muckracker  {
                 }
             }
 
-            while (!robotController.onTheMap(robotController.getLocation().translate(0, -5))) {
+            while (robotController.onTheMap(robotController.getLocation().translate(0, -3))) {
                 Pathfinding.move(Direction.SOUTH, robotController);
-                System.out.println("Scanning SOUTH");
                 if (seesEnemyHQ()) {
                     mode = MuckMode.MUCKMAKER;
                     return;
@@ -203,12 +231,11 @@ public class Muckracker  {
             }
 
             //Check if we can go east still
-            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(5, 0)));
+            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(3, 0)));
 
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.EAST, robotController);
-                    System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
                         mode = MuckMode.MUCKMAKER;
                         return;
@@ -217,7 +244,6 @@ public class Muckracker  {
             } else {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.WEST, robotController);
-                    System.out.println("Scanning WEST");
                     if (seesEnemyHQ()) {
                         mode = MuckMode.MUCKMAKER;
                         return;
@@ -267,5 +293,68 @@ public class Muckracker  {
         return closest;
     }
 
+    private boolean canChoke() throws GameActionException {
+        return seesEnemyHQ() && (chokeSpots() != null);
+    }
 
+    /**
+     * Harnesses the pure strength of the Muck man by having it just sit next to the enemy EC,
+     * preventing it from building any units while also killing any slanderers that come into range
+     */
+    private void blackOutTheSunMyChildren() throws GameActionException {
+        //We have made it to our destination, or it is currently occupied so lets try to kill something
+        if (!Pathfinding.tryMove(Pathfinding.findPath(chokeSpot, robotController), robotController)) {
+            RobotInfo[] infos = robotController.senseNearbyRobots(ACTION_R2, enemyTeam);
+            for (RobotInfo info : infos) {
+                if (info.getType() == RobotType.SLANDERER) {
+                    robotController.expose(info.getLocation());
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Finds if any spots are open around the enemy EC. Attempts to choke it out
+     * @return
+     */
+    private MapLocation[] chokeSpots() {
+        ArrayList<MapLocation> openSpots = new ArrayList<>();
+        RobotInfo[] info;
+
+        //Check north
+        if (robotController.canSenseLocation(enemyEC.translate(0,1))) {
+            info = robotController.senseNearbyRobots(enemyEC.translate(0, 1), 0, enemyTeam);
+            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+                openSpots.add(info[0].getLocation());
+            }
+        }
+        //Check east
+        if(robotController.canSenseLocation(enemyEC.translate(1,0))) {
+            info = robotController.senseNearbyRobots(enemyEC.translate(1, 0), 0, enemyTeam);
+            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+                openSpots.add(info[0].getLocation());
+            }
+        }
+        //Check south
+        if(robotController.canSenseLocation(enemyEC.translate(0,-1))) {
+            info = robotController.senseNearbyRobots(enemyEC.translate(0, -1), 0, enemyTeam);
+            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+                openSpots.add(info[0].getLocation());
+            }
+        }
+        //Check west
+        if(robotController.canSenseLocation(enemyEC.translate(-1,0))) {
+            info = robotController.senseNearbyRobots(enemyEC.translate(-1, 0), 0, enemyTeam);
+            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+                openSpots.add(info[0].getLocation());
+            }
+        }
+
+        if (openSpots.size() == 0) {
+            return null;
+        } else {
+            return (MapLocation[]) openSpots.toArray();
+        }
+    }
 }
