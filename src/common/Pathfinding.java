@@ -1,6 +1,11 @@
 package common;
 
-import battlecode.common.*;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import scala.collection.parallel.ParIterableLike.Max;
 
 /**
  * Holds static common funcs to be used across all robots
@@ -16,9 +21,11 @@ public class Pathfinding {
      * @return the next step in the path
      */
     public static Direction findPath(MapLocation destination, RobotController robotController) {
-        int dx = destination.x - robotController.getLocation().x;
-        int dy = destination.y - robotController.getLocation().y;
-        Direction direction = Direction.CENTER;
+        final int dx = destination.x - robotController.getLocation().x;
+        final int dy = destination.y - robotController.getLocation().y;
+
+        // is the x direction larger?
+        final boolean xDominates = Math.abs(dx) >= Math.abs(dy);
 
         //(x, y)
         //-+ NorthWest
@@ -32,62 +39,71 @@ public class Pathfinding {
 
         if (dx < 0 && dy > 0 && robotController.canMove(Direction.NORTHWEST)) {
             return Direction.NORTHWEST;
-        } else if ( dx > 0 && dy > 0 && robotController.canMove(Direction.NORTHEAST)) {
+        } else if (dx > 0 && dy > 0 && robotController.canMove(Direction.NORTHEAST)) {
             return Direction.NORTHEAST;
-        } else if ( dx < 0 && dy < 0 && robotController.canMove(Direction.SOUTHWEST)) {
+        } else if (dx < 0 && dy < 0 && robotController.canMove(Direction.SOUTHWEST)) {
             return Direction.SOUTHWEST;
-        } else if ( dx > 0 && dy < 0 && robotController.canMove(Direction.SOUTHEAST)) {
+        } else if (dx > 0 && dy < 0 && robotController.canMove(Direction.SOUTHEAST)) {
             return Direction.SOUTHEAST;
         }
 
-        if ( dy > 0 && robotController.canMove(Direction.NORTH)) {
-            return Direction.NORTH;
-        } else if (dy > 0 && robotController.canMove(Direction.NORTHEAST)){
-            return Direction.NORTHEAST;
-        } else if (dy > 0 && robotController.canMove(Direction.NORTHWEST)){
-            return Direction.NORTHWEST;
-        } else if ( robotController.canMove(Direction.EAST)) {
-            return Direction.EAST;
-        } else if ( robotController.canMove(Direction.WEST)) {
-            return Direction.WEST;
+        if (dy > 0 && !xDominates) {
+            if (robotController.canMove(Direction.NORTH)) {
+                return Direction.NORTH;
+            } else if (robotController.canMove(Direction.NORTHEAST)) {
+                return Direction.NORTHEAST;
+            } else if (robotController.canMove(Direction.NORTHWEST)) {
+                return Direction.NORTHWEST;
+            } else if (robotController.canMove(Direction.EAST)) {
+                return Direction.EAST;
+            } else if (robotController.canMove(Direction.WEST)) {
+                return Direction.WEST;
+            }
         }
 
-        if ( dy < 0 && robotController.canMove(Direction.SOUTH)) {
-            return Direction.SOUTH;
-        } else if (dy > 0 && robotController.canMove(Direction.SOUTHEAST)){
-            return Direction.SOUTHEAST;
-        } else if (dy > 0 && robotController.canMove(Direction.SOUTHWEST)){
-            return Direction.SOUTHWEST;
-        } else if ( robotController.canMove(Direction.EAST)) {
-            return Direction.EAST;
-        } else if ( robotController.canMove(Direction.WEST)) {
-            return Direction.WEST;
+        if (dy < 0 && !xDominates) {
+            if (robotController.canMove(Direction.SOUTH)) {
+                return Direction.SOUTH;
+            } else if (robotController.canMove(Direction.SOUTHEAST)) {
+                return Direction.SOUTHEAST;
+            } else if (robotController.canMove(Direction.SOUTHWEST)) {
+                return Direction.SOUTHWEST;
+            } else if (robotController.canMove(Direction.EAST)) {
+                return Direction.EAST;
+            } else if (robotController.canMove(Direction.WEST)) {
+                return Direction.WEST;
+            }
         }
 
-        if ( dx > 0 && robotController.canMove(Direction.EAST)) {
-            return Direction.EAST;
-        } else if (dy > 0 && robotController.canMove(Direction.SOUTHEAST)){
-            return Direction.SOUTHEAST;
-        } else if (dy > 0 && robotController.canMove(Direction.NORTHEAST)){
-            return Direction.NORTHEAST;
-        } else if ( robotController.canMove(Direction.NORTH)) {
-            return Direction.NORTH;
-        } else if ( robotController.canMove(Direction.SOUTH)) {
-            return Direction.SOUTH;
+        if (dx > 0) {
+            if (robotController.canMove(Direction.EAST)) {
+                return Direction.EAST;
+            } else if (robotController.canMove(Direction.SOUTHEAST)) {
+                return Direction.SOUTHEAST;
+            } else if (robotController.canMove(Direction.NORTHEAST)) {
+                return Direction.NORTHEAST;
+            } else if (robotController.canMove(Direction.NORTH)) {
+                return Direction.NORTH;
+            } else if (robotController.canMove(Direction.SOUTH)) {
+                return Direction.SOUTH;
+            }
         }
 
-        if (dx < 0 && robotController.canMove(Direction.WEST)){
-            return Direction.WEST;
-        } else if (dy > 0 && robotController.canMove(Direction.SOUTHWEST)){
-            return Direction.SOUTHWEST;
-        } else if (dy > 0 && robotController.canMove(Direction.NORTHWEST)){
-            return Direction.NORTHWEST;
-        } else if ( robotController.canMove(Direction.NORTH)) {
-            return Direction.NORTH;
-        } else if ( robotController.canMove(Direction.SOUTH)) {
-            return Direction.SOUTH;
+        if (dx < 0) {
+            if (robotController.canMove(Direction.WEST)) {
+                return Direction.WEST;
+            } else if (dy > 0 && robotController.canMove(Direction.SOUTHWEST)) {
+                return Direction.SOUTHWEST;
+            } else if (dy > 0 && robotController.canMove(Direction.NORTHWEST)) {
+                return Direction.NORTHWEST;
+            } else if (robotController.canMove(Direction.NORTH)) {
+                return Direction.NORTH;
+            } else if (robotController.canMove(Direction.SOUTH)) {
+                return Direction.SOUTH;
+            }
         }
-        return direction;
+
+        return Direction.CENTER;
     }
 
     /**
@@ -123,7 +139,7 @@ public class Pathfinding {
     /**
      * Move in direction if can
      * Does nothing if cannot move
-     * 
+     *
      * @param direction Direction to move in
      * @param robotController controller for robot instance
      * @return true if robot has moved

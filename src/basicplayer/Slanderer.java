@@ -3,6 +3,7 @@ package basicplayer;
 import battlecode.common.*;
 import common.Pathfinding;
 import common.Directions;
+import common.Robot;
 
 /**
  * Slanderers
@@ -16,7 +17,7 @@ import common.Directions;
  * Sensor r^2: 20
  * Detect r^2: 20
  */
-public class Slanderer {
+public class Slanderer implements Robot {
     private final RobotController robotController;
     private final RobotInfo parent;
 

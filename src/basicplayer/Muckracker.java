@@ -5,6 +5,7 @@ import common.CoordinateSystem;
 import common.Directions;
 import common.Flags;
 import common.Pathfinding;
+import common.Robot;
 
 /**
  * Muckrackers are the current class we use for scouting due to their sense of range of 40.
@@ -15,7 +16,7 @@ import common.Pathfinding;
  * Sensor r^2: 30
  * Detect r^2: 40
  */
-public class Muckracker  {
+public class Muckracker implements Robot {
     private final RobotController robotController;
 
     //Could be enum in the future

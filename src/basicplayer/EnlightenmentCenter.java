@@ -13,12 +13,13 @@ import common.CoordinateSystem;
 import common.EnlightenmentCenterUtils;
 import common.Flags;
 import common.Flags.Type;
+import common.Robot;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class EnlightenmentCenter {
+public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
         RobotType.SLANDERER,
