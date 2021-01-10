@@ -70,10 +70,10 @@ public class Pathfinding {
             return Direction.SOUTHEAST;
         } else if (dy > 0 && robotController.canMove(Direction.NORTHEAST)){
             return Direction.NORTHEAST;
-        } else if ( robotController.canMove(Direction.EAST)) {
-            return Direction.EAST;
-        } else if ( robotController.canMove(Direction.WEST)) {
-            return Direction.WEST;
+        } else if ( robotController.canMove(Direction.NORTH)) {
+            return Direction.NORTH;
+        } else if ( robotController.canMove(Direction.SOUTH)) {
+            return Direction.SOUTH;
         }
 
         if (dx < 0 && robotController.canMove(Direction.WEST)){
@@ -82,10 +82,10 @@ public class Pathfinding {
             return Direction.SOUTHWEST;
         } else if (dy > 0 && robotController.canMove(Direction.NORTHWEST)){
             return Direction.NORTHWEST;
-        } else if ( robotController.canMove(Direction.EAST)) {
-            return Direction.EAST;
-        } else if ( robotController.canMove(Direction.WEST)) {
-            return Direction.WEST;
+        } else if ( robotController.canMove(Direction.NORTH)) {
+            return Direction.NORTH;
+        } else if ( robotController.canMove(Direction.SOUTH)) {
+            return Direction.SOUTH;
         }
         return direction;
     }
