@@ -1,13 +1,13 @@
 package common;
 
 public class LinearBidder implements Bidder {
-    private static int MAX_NUM_TIMES_USED_MIN = 10;
+    static int MAX_NUM_TIMES_USED_MIN = 10;
 
     private final int startingBid;
     private final int step;
     private final int maxBid;
 
-    private int previousBid;
+    private int previousBid = 0;
     private int minSuccessful = 0;
     private int numTimesUsedMin = 0;
 
@@ -15,8 +15,6 @@ public class LinearBidder implements Bidder {
         this.startingBid = startingBid;
         this.step = step;
         this.maxBid = maxBid;
-
-        this.previousBid = startingBid;
     }
 
     // pass-through to record previous bid
@@ -27,6 +25,10 @@ public class LinearBidder implements Bidder {
     }
 
     public int getBidInternal(final boolean wonLastBid) {
+        if (previousBid == 0) {
+            return startingBid;
+        }
+
         if (wonLastBid) {
             minSuccessful = previousBid;
         }
@@ -39,9 +41,10 @@ public class LinearBidder implements Bidder {
                 return bid;
             }
             // go down if we've been winning too long and could get cheaper wins
-            if (numTimesUsedMin <= MAX_NUM_TIMES_USED_MIN) {
-                final int bid = minSuccessful + step;
+            if (numTimesUsedMin > MAX_NUM_TIMES_USED_MIN) {
+                final int bid = minSuccessful - step;
                 minSuccessful = 0;
+                numTimesUsedMin = 0;
                 return bid;
             } else {
                 numTimesUsedMin++;
