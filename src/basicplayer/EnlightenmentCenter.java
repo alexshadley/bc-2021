@@ -129,7 +129,9 @@ public class EnlightenmentCenter {
                 }
             }
 
-            rc.bid(1);
+            if (rc.canBid(1)) {
+                rc.bid(1);
+            }
             Clock.yield();
         }
     }
@@ -190,9 +192,14 @@ public class EnlightenmentCenter {
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {
+            final RobotType type = typeDeciders.get(mode).next();
+            final int influence = type == RobotType.MUCKRAKER
+                ? 1
+                : Math.max(50, rc.getInfluence() / 4);
+
             return new TypeAndInfluence(
-                typeDeciders.get(mode).next(),
-                rc.getInfluence() / 4
+                type,
+                influence
             );
         }
     }
