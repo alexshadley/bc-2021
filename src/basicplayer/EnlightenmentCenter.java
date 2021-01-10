@@ -192,7 +192,7 @@ public class EnlightenmentCenter {
         } else {
             return new TypeAndInfluence(
                 typeDeciders.get(mode).next(),
-                rc.getInfluence() / 2
+                rc.getInfluence() / 4
             );
         }
     }
