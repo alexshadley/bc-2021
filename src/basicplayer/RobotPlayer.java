@@ -37,7 +37,7 @@ public strictfp class RobotPlayer {
 
                 case MUCKRAKER:
                     final boolean isScout = rc.getRoundNum() <= 100;
-                    robotCode = new Muckracker(rc, isScout, enemyTeam, parent);
+                    robotCode = new Muckracker(rc, enemyTeam, parent);
                     break;
 
                 default:

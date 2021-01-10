@@ -8,7 +8,6 @@ import common.Pathfinding;
 import common.Robot;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Muckrackers are the current class we use for scouting due to their sense of range of 40.
@@ -73,12 +72,13 @@ public class Muckracker implements Robot {
                         }
                         break;
                     case CHOKER:
+                        System.out.println("We are attempting to choke");
                         if (chokeSpot == null) {
-                            MapLocation[] openSpots = chokeSpots();
+                            ArrayList<MapLocation> openSpots = chokeSpots();
                             if (openSpots == null) {
                                 mode = MuckMode.MUCKMAKER;
                             } else {
-                                chokeSpot = openSpots[(int) (Math.random() % 4)];
+                                chokeSpot = openSpots.get((int) (Math.random() % openSpots.size()));
                             }
                         }
                         blackOutTheSunMyChildren();
@@ -319,35 +319,35 @@ public class Muckracker implements Robot {
      * Finds if any spots are open around the enemy EC. Attempts to choke it out
      * @return
      */
-    private MapLocation[] chokeSpots() {
+    private ArrayList<MapLocation> chokeSpots() {
         ArrayList<MapLocation> openSpots = new ArrayList<>();
         RobotInfo[] info;
 
         //Check north
         if (robotController.canSenseLocation(enemyEC.translate(0,1))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(0, 1), 0, enemyTeam);
-            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+            if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
         //Check east
         if(robotController.canSenseLocation(enemyEC.translate(1,0))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(1, 0), 0, enemyTeam);
-            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+            if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
         //Check south
         if(robotController.canSenseLocation(enemyEC.translate(0,-1))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(0, -1), 0, enemyTeam);
-            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+            if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
         //Check west
         if(robotController.canSenseLocation(enemyEC.translate(-1,0))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(-1, 0), 0, enemyTeam);
-            if (info.length == 0 || info[0].getTeam() == enemyTeam) {
+            if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
@@ -355,7 +355,7 @@ public class Muckracker implements Robot {
         if (openSpots.size() == 0) {
             return null;
         } else {
-            return (MapLocation[]) openSpots.toArray();
+            return openSpots;
         }
     }
 }
