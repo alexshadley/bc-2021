@@ -5,9 +5,12 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
+import common.Bidder;
+import common.BidderRunner;
+import common.ConstantBidder;
 import common.CoordinateSystem;
+import common.EnlightenmentCenterUtils;
 import common.Flags;
 import common.Flags.Type;
 import java.util.HashMap;
@@ -87,8 +90,11 @@ public class EnlightenmentCenter {
         new TypeAndInfluence(RobotType.MUCKRAKER, 1)
     };
 
+    private static final Bidder bidder = new ConstantBidder(1);
+
     private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
+    private final BidderRunner bidderRunner;
     private ECMode mode;
 
     private int[] myRobots = new int[1000];
@@ -103,6 +109,7 @@ public class EnlightenmentCenter {
     public EnlightenmentCenter(final RobotController rc) {
         this.rc = rc;
         this.coordinateSystem = new CoordinateSystem(rc.getLocation());
+        this.bidderRunner = new BidderRunner(rc.getTeamVotes());
         this.mode = ECMode.SCOUTING;
     }
 
@@ -120,7 +127,7 @@ public class EnlightenmentCenter {
 
             for (final Direction dir : Direction.allDirections()) {
                 if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
-                    final int robotId = buildRobot(next.robotType, dir, next.influence).ID;
+                    final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
                     myRobots[robotCount] = robotId;
                     robotCount++;
                     if (next.robotType == RobotType.MUCKRAKER) {
@@ -129,9 +136,7 @@ public class EnlightenmentCenter {
                 }
             }
 
-            if (rc.canBid(1)) {
-                rc.bid(1);
-            }
+            bidderRunner.attemptBid(rc, bidder);
             Clock.yield();
         }
     }
@@ -202,14 +207,6 @@ public class EnlightenmentCenter {
                 influence
             );
         }
-    }
-
-    private RobotInfo buildRobot(RobotType robotType, Direction dir, int influence)
-        throws GameActionException {
-
-        rc.buildRobot(robotType, dir, influence);
-        final MapLocation ecLocation = rc.getLocation();
-        return rc.senseRobotAtLocation(ecLocation.add(dir));
     }
 
     /**
