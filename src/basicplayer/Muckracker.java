@@ -228,17 +228,44 @@ public class Muckracker  {
     }
 
     /**
-     * Attack mode.
-     * This method will have the muckracker search for a slanderer attempt to slay it
+     * Finds the closest slanderer and moves closer to it, or kills it
      */
     private void liarLiarYourPantsAreOnFire() throws GameActionException {
-        RobotInfo[] infos = robotController.senseNearbyRobots(ACTION_R2, enemyTeam);
+        RobotInfo closestSlanderer = getClosestSlanderer();
+
+        if (closestSlanderer != null) {
+            //if we are in range to kill, kill
+            if (Directions.distanceTo(closestSlanderer.getLocation(), robotController.getLocation()) <= ACTION_R2) {
+                robotController.expose(closestSlanderer.getLocation());
+            } else {
+                //move closer to it
+                Pathfinding.move(closestSlanderer.getLocation(), robotController);
+            }
+        } else {
+            Pathfinding.tryMove(Directions.getRandomDirection(), robotController);
+        }
+    }
+
+    /**
+     * Returns the robot info of the closest slanderer.
+     * If none are found returns null
+     * @return A robot's info
+     */
+    private RobotInfo getClosestSlanderer() {
+        RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
+        RobotInfo closest = null;
+
         for (RobotInfo info : infos) {
             if (info.type == RobotType.SLANDERER) {
-                robotController.expose(info.location);
-                return;
+                if (closest == null) {
+                    closest = info;
+                } else if (Directions.distanceTo(info.getLocation(), robotController.getLocation()) < Directions.distanceTo(closest.getLocation(), robotController.getLocation())) {
+                    closest = info;
+                }
             }
         }
-        Pathfinding.tryMove(Directions.getRandomDirection(), robotController);
+        return closest;
     }
+
+
 }

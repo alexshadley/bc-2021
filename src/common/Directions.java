@@ -1,6 +1,7 @@
 package common;
 
 import battlecode.common.Direction;
+import battlecode.common.MapLocation;
 
 /**
  * Class to handle direction helper functions
@@ -25,5 +26,17 @@ public class Directions {
      */
     public static Direction getRandomDirection() {
         return directions[(int) ( Math.random() * directions.length )]; 
+    }
+
+    /**
+     * Returns the relative distance to a location
+     * @param to where are we measuring to
+     * @param from where are we measuring from
+     * @return squared distance
+     */
+    public static int distanceTo(MapLocation to, MapLocation from) {
+        int dx = Math.abs(to.x - from.x);
+        int dy = Math.abs(to.y - from.y);
+        return (int) (Math.pow(dx, 2) + (Math.pow(dy, 2)));
     }
 }

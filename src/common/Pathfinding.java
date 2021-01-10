@@ -99,7 +99,6 @@ public class Pathfinding {
      */
     public static void move(MapLocation destination, RobotController robotController) throws GameActionException {
         robotController.move(findPath(destination, robotController));
-        Clock.yield();
     }
 
     /**
@@ -111,10 +110,12 @@ public class Pathfinding {
     public static void move(Direction direction, RobotController robotController) throws GameActionException {
         if (robotController.canMove(direction)) {
             robotController.move(direction);
+            //TODO Make sure removing this yield doesn't break anything
             Clock.yield();
         } else {
             direction = findPath(new MapLocation(direction.dx, direction.dy), robotController);
             robotController.move(direction);
+            //TODO Make sure removing this yield doesn't break anything
             Clock.yield();
         }
     }
