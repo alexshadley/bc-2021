@@ -32,6 +32,7 @@ public class EnlightenmentCenter {
 
     private static enum ECMode {
         SCOUTING,
+        BUILDING,
         RUSHING
     }
 
@@ -111,6 +112,11 @@ public class EnlightenmentCenter {
                 if (Flags.getFlagType(flag) == Type.ENEMY_EC_FOUND) {
                     final int[] coords = Flags.getEnemyECFoundInfo(flag);
                     addEnemyEC(coordinateSystem.toAbsolute(coords[0], coords[1]));
+
+                    // start building up forces
+                    if (mode == ECMode.SCOUTING) {
+                        mode = ECMode.BUILDING;
+                    }
                 }
 
             } catch (final GameActionException e) {
@@ -142,7 +148,19 @@ public class EnlightenmentCenter {
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {
-            return new TypeAndInfluence(randomSpawnableRobotType(), 50);
+            switch (mode) {
+                case SCOUTING:
+                    return new TypeAndInfluence(randomSpawnableRobotType(), 50);
+
+                case BUILDING:
+                    return new TypeAndInfluence(RobotType.POLITICIAN, 50);
+
+                case RUSHING:
+                    return new TypeAndInfluence(RobotType.POLITICIAN, 100);
+
+                default:
+                    return new TypeAndInfluence(randomSpawnableRobotType(), 50);
+            }
         }
     }
 
