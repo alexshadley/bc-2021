@@ -232,7 +232,7 @@ public class Muckracker  {
      * This method will have the muckracker search for a slanderer attempt to slay it
      */
     private void liarLiarYourPantsAreOnFire() throws GameActionException {
-        RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
+        RobotInfo[] infos = robotController.senseNearbyRobots(ACTION_R2, enemyTeam);
         for (RobotInfo info : infos) {
             if (info.type == RobotType.SLANDERER) {
                 robotController.expose(info.location);
