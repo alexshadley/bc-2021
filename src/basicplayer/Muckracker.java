@@ -31,13 +31,14 @@ public class Muckracker  {
 
     Team enemyTeam = null;
 
-    Muckracker(RobotController robotController, Boolean isScout, Team enemyTeam, RobotInfo parent) {
+    public Muckracker(RobotController robotController, Boolean isScout, Team enemyTeam, RobotInfo parent) {
         this.robotController = robotController;
         this.isScout = isScout;
         this.enemyTeam = enemyTeam;
         this.parent = parent;
 
-        this.coordinateSystem = new CoordinateSystem(parent.location);
+        if (parent != null)
+            this.coordinateSystem = new CoordinateSystem(parent.location);
     }
 
     // Main execution loop
@@ -51,20 +52,16 @@ public class Muckracker  {
                     System.out.println(e.getMessage());
                 }
             } else {
-                //idk something
+                liarLiarYourPantsAreOnFire();
             }
         }
     }
 
     /**
-     * TODO this is probably going to change. Since the validation logic is currently broken in the client
      * From what I've seen map creation doesn't get too crazy so as a start:
      *  if we are red go east
      *  if we are blue go west
-     *  bfs if we hit the other side of the map
-     *
-     * I also think we need to return home, as the EC's can only see flags 40r^2 away.
-     * TODO replace the static move east/west with PathFinder.findpath()
+     *  If we hit the edge of the map then we just scan
      */
     private void goScouting() throws GameActionException {
         // if we are red go east
@@ -80,14 +77,14 @@ public class Muckracker  {
                     robotController.move(Direction.SOUTHEAST);
                     Clock.yield();
                 } else {
-                    liarLiarYourPantsAreOnFire();
                 }
 
-                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x+6, robotController.getLocation().y))) {
+                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x+5, robotController.getLocation().y))) {
                     scan();
                 }
             }
-            goHome();
+            //goHome();
+            return;
 
         } else {
             // if we are blue go west
@@ -102,14 +99,15 @@ public class Muckracker  {
                     robotController.move(Direction.SOUTHWEST);
                     Clock.yield();
                 } else {
-                    liarLiarYourPantsAreOnFire();
+                    //liarLiarYourPantsAreOnFire();
                 }
 
-                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x-6, robotController.getLocation().y))) {
+                if (!robotController.onTheMap(new MapLocation(robotController.getLocation().x-5, robotController.getLocation().y))) {
                     scan();
                 }
             }
-            goHome();
+            //goHome();
+            return;
         }
     }
 
@@ -164,46 +162,52 @@ public class Muckracker  {
     private void scan() throws GameActionException {
         boolean goingEast = true;
         while (true) {
-            while (!robotController.onTheMap(robotController.getLocation().translate(0, 6))) {
+            while (!robotController.onTheMap(robotController.getLocation().translate(0, 5))) {
+                System.out.println("Scanning NORTH");
                 Pathfinding.move(Direction.NORTH, robotController);
                 if (seesEnemyHQ()) {
                     return;
                 }
             }
 
-            //Check if we can go east still
-            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(6, 0)));
+            //Check if we can go east, latches false
+            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(5, 0)));
 
             //Should we unroll?
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.EAST, robotController);
+                    System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             } else {
                 for (int i = 0; i < 12; i++) {
-                    Pathfinding.move(Direction.EAST, robotController);
+                    Pathfinding.move(Direction.WEST, robotController);
+                    System.out.println("Scanning WEST");
+
                     if (seesEnemyHQ()) {
                         return;
                     }
                 }
             }
 
-            while (!robotController.onTheMap(robotController.getLocation().translate(0, -6))) {
+            while (!robotController.onTheMap(robotController.getLocation().translate(0, -5))) {
                 Pathfinding.move(Direction.SOUTH, robotController);
+                System.out.println("Scanning SOUTH");
                 if (seesEnemyHQ()) {
                     return;
                 }
             }
 
             //Check if we can go east still
-            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(6, 0)));
+            goingEast = (goingEast && robotController.onTheMap(robotController.getLocation().translate(5, 0)));
 
             if (goingEast) {
                 for (int i = 0; i < 12; i++) {
-                    Pathfinding.move(Direction.WEST, robotController);
+                    Pathfinding.move(Direction.EAST, robotController);
+                    System.out.println("Scanning EAST");
                     if (seesEnemyHQ()) {
                         return;
                     }
@@ -211,6 +215,7 @@ public class Muckracker  {
             } else {
                 for (int i = 0; i < 12; i++) {
                     Pathfinding.move(Direction.WEST, robotController);
+                    System.out.println("Scanning WEST");
                     if (seesEnemyHQ()) {
                         return;
                     }
@@ -220,10 +225,21 @@ public class Muckracker  {
     }
 
     /**
-     * Tells the muckracker to kill an enemy.
-     * If we can kill a HVL (High value liar) than prioritize that.
+     * Attack mode.
+     * This method will have the muckracker search for a slanderer attempt to slay it
      */
     private void liarLiarYourPantsAreOnFire() {
+        while (true) {
+            RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
+            for (RobotInfo info : infos) {
+                if (info.type == RobotType.SLANDERER) {
+                    try {
+                        robotController.expose(info.location);
+                    } catch (GameActionException e) {
 
+                    }
+                }
+            }
+        }
     }
 }
