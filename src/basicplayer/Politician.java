@@ -13,8 +13,9 @@ import common.Directions;
 import common.Flags;
 import common.Flags.Type;
 import common.Pathfinding;
+import common.Robot;
 
-public class Politician {
+public class Politician implements Robot {
     private static final int ACTION_R2 = 9;
     private static final int SENSOR_R2 = 25;
     private static final int DETECT_R2 = 25;
@@ -31,11 +32,14 @@ public class Politician {
     // only valid for RUSHING mode, indicates the coords of the base to rush
     private MapLocation rushCoords;
 
+    private final Team enemy;
+
     public Politician(final RobotController rc, final RobotInfo parent) {
         this.rc = rc;
         this.parent = parent;
         this.coordinateSystem = new CoordinateSystem(parent.location);
         this.mode = PoliticanMode.ROAMING;
+        this.enemy = rc.getTeam().opponent();
     }
 
     /**
@@ -44,11 +48,12 @@ public class Politician {
     public void run() throws GameActionException {
         while (true) {
             checkCommunications();
-            attackIfPossible();
 
             if (mode == PoliticanMode.ROAMING) {
+                attackIfPossible();
                 Pathfinding.tryMove(Directions.getRandomDirection(), rc);
             } else {
+                rushAttack();
                 Pathfinding.tryMove(Pathfinding.findPath(rushCoords, rc), rc);
             }
 
@@ -71,14 +76,43 @@ public class Politician {
     }
 
     private void attackIfPossible() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
+        final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        if (attackable.length != 0) {
+            attemptAttack(actionRadius);
             return;
+        }
+
+        final RobotInfo[] neutral = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
+        if (neutral.length != 0) {
+            attemptAttack(actionRadius);
+        }
+    }
+
+    /**
+     * Try to avoid attacking units and focus on ECs
+     */
+    private void rushAttack() throws GameActionException {
+        final int actionRadius = rc.getType().actionRadiusSquared;
+
+        final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        for (final RobotInfo target : attackable) {
+            if (target.type == RobotType.ENLIGHTENMENT_CENTER) {
+                System.out.println("Enemy EC found, attacking");
+                attemptAttack(actionRadius);
+                return;
+            }
+        }
+
+        if (attackable.length >= 5) {
+            System.out.println("Overwhelmed, attacking");
+            attemptAttack(actionRadius);
+        }
+    }
+
+    private void attemptAttack(final int actionRadius) throws GameActionException {
+        if (rc.canEmpower(actionRadius)) {
+            rc.empower(actionRadius);
         }
     }
 }

@@ -1,4 +1,4 @@
-package robotutils;
+package common;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

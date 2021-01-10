@@ -18,13 +18,16 @@ public class Startup {
     public static RobotInfo getParent(final RobotController rc) throws GameActionException {
         final MapLocation myLocation = rc.getLocation();
         for (final Direction direction : Direction.allDirections()) {
-            final RobotInfo neighbor = rc.senseRobotAtLocation(myLocation.add(direction));
-            if (neighbor != null && neighbor.type == RobotType.ENLIGHTENMENT_CENTER) {
-                return neighbor;
+            // check if location can be sensed to avoid sensing off the map
+            if (rc.canSenseLocation(myLocation.add(direction))) {
+                final RobotInfo neighbor = rc.senseRobotAtLocation(myLocation.add(direction));
+                if (neighbor != null && neighbor.type == RobotType.ENLIGHTENMENT_CENTER) {
+                    return neighbor;
+                }
             }
         }
 
-        // should never be reached
+        // occurs in the event of EC or pol converted
         return null;
     }
 }
