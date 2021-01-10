@@ -52,13 +52,13 @@ public strictfp class RobotPlayer {
                 ec.run();
                 break;
 
-            /*case POLITICIAN:
-                runPolitician();
+            case POLITICIAN:
+                final Politician politician = new Politician(rc, parent);
+                politician.run();
                 break;
-            */
 
             case SLANDERER:
-                final Slanderer slanderer = new Slanderer(rc);
+                final Slanderer slanderer = new Slanderer(rc, parent);
                 slanderer.run();
                 break;
 

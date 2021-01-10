@@ -62,7 +62,7 @@ public class Flags {
      */
     public static int encodeAttackEnemyECFlag(final int x, final int y) {
         return encodeFlag(
-            Type.ENEMY_EC_FOUND,
+            Type.ATTACK_ENEMY_EC,
             ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
         );
     }

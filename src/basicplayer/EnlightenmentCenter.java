@@ -35,7 +35,7 @@ public class EnlightenmentCenter {
         RUSHING
     }
 
-    private static final int MAGIC_RUSH_TURN = 1500;
+    private static final int MAGIC_RUSH_TURN = 600;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[] {
         new TypeAndInfluence(RobotType.SLANDERER, 100),

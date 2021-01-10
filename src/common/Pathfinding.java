@@ -20,22 +20,23 @@ public class Pathfinding {
         int dy = destination.y - robotController.getLocation().y;
         Direction direction = Direction.CENTER;
 
-        //+- NorthWest
+        //(x, y)
+        //-+ NorthWest
         //++ NorthEast
         //-- SouthWest
-        //-+ SouthEast
-        //+= North
-        //=- South
-        //=+ East
-        //-= West
+        //+- SouthEast
+        //=+ North
+        //-= South
+        //+= East
+        //=- West
 
-        if (dx > 0 && dy < 0 && robotController.canMove(Direction.NORTHWEST)) {
+        if (dx < 0 && dy > 0 && robotController.canMove(Direction.NORTHWEST)) {
             return Direction.NORTHWEST;
         } else if ( dx > 0 && dy > 0 && robotController.canMove(Direction.NORTHEAST)) {
             return Direction.NORTHEAST;
         } else if ( dx < 0 && dy < 0 && robotController.canMove(Direction.SOUTHWEST)) {
             return Direction.SOUTHWEST;
-        } else if ( dx < 0 && dy > 0 && robotController.canMove(Direction.SOUTHEAST)) {
+        } else if ( dx > 0 && dy < 0 && robotController.canMove(Direction.SOUTHEAST)) {
             return Direction.SOUTHEAST;
         }
 

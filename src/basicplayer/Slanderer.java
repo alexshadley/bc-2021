@@ -18,6 +18,7 @@ import common.Directions;
  */
 public class Slanderer {
     private final RobotController robotController;
+    private final RobotInfo parent;
 
     private static final int ACTION_R2 = 0;
     private static final int SENSOR_R2 = 20;
@@ -28,8 +29,9 @@ public class Slanderer {
      * 
      * @param robotController controller for current slanderer
      */
-    public Slanderer( RobotController robotController ) {
+    public Slanderer(final RobotController robotController, final RobotInfo parent) {
         this.robotController = robotController;
+        this.parent = parent;
     }
 
     /**
@@ -37,6 +39,14 @@ public class Slanderer {
      **/
     public void run() throws GameActionException {
         while ( true ) {
+            // if we've become a politician, switch to that code
+            if (robotController.getType() == RobotType.POLITICIAN) {
+                System.out.println("I've become a politican, transitioning");
+                final Politician politician = new Politician(robotController, parent);
+                politician.run();
+                return;
+            }
+
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
                 // Try and run from enemies
@@ -55,7 +65,7 @@ public class Slanderer {
      * Slanderer brain logic
      * If spot enemy - RUN!
      *
-     * @throws GaneActionException
+     * @throws GameActionException
      */
     private void flee() throws GameActionException {
         // Current location
