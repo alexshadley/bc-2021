@@ -39,57 +39,38 @@ public strictfp class RobotPlayer {
      * If this method returns, the robot dies!
      **/
     @SuppressWarnings("unused")
-    public static void run(RobotController rc) throws GameActionException {
-        System.out.println(rc.getType() + " created");
-        RobotPlayer.rc = rc;
+    public static void run(RobotController rc) {
+        try {
+            System.out.println(rc.getType() + " created");
+            RobotPlayer.rc = rc;
 
-        final Team enemyTeam = rc.getTeam().opponent();
-        final RobotInfo parent = Startup.getParent(rc);
+            final Team enemyTeam = rc.getTeam().opponent();
+            final RobotInfo parent = Startup.getParent(rc);
 
-        switch (rc.getType()) {
-            case ENLIGHTENMENT_CENTER:
-                final EnlightenmentCenter ec = new EnlightenmentCenter(rc);
-                ec.run();
-                break;
+            switch (rc.getType()) {
+                case ENLIGHTENMENT_CENTER:
+                    final EnlightenmentCenter ec = new EnlightenmentCenter(rc);
+                    ec.run();
+                    break;
 
-            case POLITICIAN:
-                final Politician politician = new Politician(rc, parent);
-                politician.run();
-                break;
+                case POLITICIAN:
+                    final Politician politician = new Politician(rc, parent);
+                    politician.run();
+                    break;
 
-            case SLANDERER:
-                final Slanderer slanderer = new Slanderer(rc, parent);
-                slanderer.run();
-                break;
+                case SLANDERER:
+                    final Slanderer slanderer = new Slanderer(rc, parent);
+                    slanderer.run();
+                    break;
 
-            case MUCKRAKER:
-                final boolean isScout = rc.getRoundNum() <= 100;
-                final Muckracker muckracker = new Muckracker(rc, isScout, enemyTeam, parent);
-                muckracker.run();
-                break;
-        }
-
-        turnCount = 0;
-
-        while (true) {
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
-            try {
-                // Here, we've separated the controls into a different method for each RobotType.
-                // You may rewrite this into your own control structure if you wish.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
-                switch (rc.getType()) {
-                    //case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
-                    case POLITICIAN:           runPolitician();          break;
-                    //case MUCKRAKER:            runMuckraker();           break;
-                }
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
-                Clock.yield();
-
-            } catch (Exception e) {
-                System.out.println(rc.getType() + " Exception");
-                e.printStackTrace();
+                case MUCKRAKER:
+                    final boolean isScout = rc.getRoundNum() <= 100;
+                    final Muckracker muckracker = new Muckracker(rc, isScout, enemyTeam, parent);
+                    muckracker.run();
+                    break;
             }
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
     }
 

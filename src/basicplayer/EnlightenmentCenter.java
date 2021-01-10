@@ -10,7 +10,9 @@ import battlecode.common.RobotType;
 import common.CoordinateSystem;
 import common.Flags;
 import common.Flags.Type;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class EnlightenmentCenter {
@@ -30,15 +32,54 @@ public class EnlightenmentCenter {
         }
     }
 
-    private static enum ECMode {
+    private static class RobotTypeDecider {
+        public final int politicianFrequency;
+        public final int slandererFrequency;
+        public final int muckrackerFrequency;
+
+        private int next = 0;
+
+        public RobotTypeDecider(final int politicianFrequency,
+                                final int slandererFrequency,
+                                final int muckrackerFrequency) {
+
+            this.politicianFrequency = politicianFrequency;
+            this.slandererFrequency = slandererFrequency;
+            this.muckrackerFrequency = muckrackerFrequency;
+        }
+
+        public RobotType next() {
+            if (next < politicianFrequency) {
+                next++;
+                return RobotType.POLITICIAN;
+            } else if (next < politicianFrequency + slandererFrequency) {
+                next++;
+                return RobotType.SLANDERER;
+            } else if (next < politicianFrequency + slandererFrequency + muckrackerFrequency) {
+                next++;
+                return RobotType.MUCKRAKER;
+            } else {
+                next = 0;
+                return next();
+            }
+        }
+    }
+
+    private enum ECMode {
         SCOUTING,
         BUILDING,
         RUSHING
     }
 
+    private static final Map<ECMode, RobotTypeDecider> typeDeciders = new HashMap() {{
+        put(ECMode.SCOUTING, new RobotTypeDecider(0, 2, 1));
+        put(ECMode.BUILDING, new RobotTypeDecider(1, 1, 0));
+        put(ECMode.RUSHING, new RobotTypeDecider(2, 1, 0));
+    }};
+
     private static final int MAGIC_RUSH_TURN = 600;
 
-    private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[] {
+    private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 100),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
@@ -148,19 +189,10 @@ public class EnlightenmentCenter {
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {
-            switch (mode) {
-                case SCOUTING:
-                    return new TypeAndInfluence(randomSpawnableRobotType(), 50);
-
-                case BUILDING:
-                    return new TypeAndInfluence(RobotType.POLITICIAN, 50);
-
-                case RUSHING:
-                    return new TypeAndInfluence(RobotType.POLITICIAN, 100);
-
-                default:
-                    return new TypeAndInfluence(randomSpawnableRobotType(), 50);
-            }
+            return new TypeAndInfluence(
+                typeDeciders.get(mode).next(),
+                60
+            );
         }
     }
 

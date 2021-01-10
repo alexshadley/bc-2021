@@ -15,4 +15,6 @@ public class EnlightenmentCenterUtils {
         final MapLocation ecLocation = rc.getLocation();
         return rc.senseRobotAtLocation(ecLocation.add(dir));
     }
+
+
 }
