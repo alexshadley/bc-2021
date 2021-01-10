@@ -5,8 +5,9 @@ public class Flags {
     final static int TYPE_BITMASK = 0x0000ff;
 
     public enum Type {
-        NONE,
-        ENEMY_EC_FOUND;
+        NONE, // default flag
+        ENEMY_EC_FOUND, // used by scouts to indicate enemy ec found
+        ATTACK_ENEMY_EC // used by ecs to initiate a rush
     }
 
     private static int encodeFlag(final Type flag, final int data) {
@@ -40,6 +41,26 @@ public class Flags {
      * @return flag
      */
     public static int encodeEnemyECFoundFlag(final int x, final int y) {
+        return encodeFlag(
+            Type.ENEMY_EC_FOUND,
+            ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
+        );
+    }
+
+    public static int[] getAttackEnemyECInfo(final int flag) {
+        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
+        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
+        return new int[] {x, y};
+    }
+
+    /**
+     * Encodes two coordinates as an ATTACK_ENEMY_EC Flag
+     *
+     * @param x enemy x coordinate, relative (must fit in 8 bits, not be negative)
+     * @param y enemy y coordinate, relative (must fit in 8 bits, not be negative)
+     * @return flag
+     */
+    public static int encodeAttackEnemyECFlag(final int x, final int y) {
         return encodeFlag(
             Type.ENEMY_EC_FOUND,
             ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)

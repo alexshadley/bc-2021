@@ -10,6 +10,8 @@ import battlecode.common.RobotType;
 import common.CoordinateSystem;
 import common.Flags;
 import common.Flags.Type;
+import java.util.HashSet;
+import java.util.Set;
 
 public class EnlightenmentCenter {
     static final RobotType[] spawnableRobot = {
@@ -28,6 +30,13 @@ public class EnlightenmentCenter {
         }
     }
 
+    private static enum ECMode {
+        SCOUTING,
+        RUSHING
+    }
+
+    private static final int MAGIC_RUSH_TURN = 1500;
+
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[] {
         new TypeAndInfluence(RobotType.SLANDERER, 100),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
@@ -38,13 +47,13 @@ public class EnlightenmentCenter {
 
     private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
-
+    private ECMode mode;
 
     private int[] myRobots = new int[1000];
     private int robotCount = 0;
 
-    private int[] myScouts = new int[100];
-    private int scoutCount = 0;
+    // TODO (alex): replace this with something more bytecode efficient if necessary
+    private final Set<Integer> scouts = new HashSet<>();
 
     private MapLocation[] enemyECs = new MapLocation[3];
     private int enemyECCount = 0;
@@ -52,10 +61,19 @@ public class EnlightenmentCenter {
     public EnlightenmentCenter(final RobotController rc) {
         this.rc = rc;
         this.coordinateSystem = new CoordinateSystem(rc.getLocation());
+        this.mode = ECMode.SCOUTING;
     }
 
     public void run() throws GameActionException {
         while (true) {
+            // check comms for things like scouting
+            checkCommunications();
+
+            // start rush if we're past rush turn and not yet rushing
+            if (rc.getRoundNum() >= MAGIC_RUSH_TURN && mode != ECMode.RUSHING) {
+                initiateRush();
+            }
+
             final TypeAndInfluence next = getRobotToBuild(robotCount);
 
             for (final Direction dir : Direction.allDirections()) {
@@ -64,23 +82,31 @@ public class EnlightenmentCenter {
                     myRobots[robotCount] = robotId;
                     robotCount++;
                     if (next.robotType == RobotType.MUCKRAKER) {
-                        myScouts[scoutCount] = robotId;
-                        scoutCount++;
+                        scouts.add(robotId);
                     }
-                    System.out.println("robot " + robotCount + " created: " + myRobots[robotCount - 1]);
                 }
             }
-
-            checkCommunications();
 
             Clock.yield();
         }
     }
 
+    private void initiateRush() throws GameActionException {
+        if (enemyECCount == 0) {
+            System.out.println("Failed to rush, no enemy ECs known");
+            return;
+        }
+
+        final int[] attackCoords = coordinateSystem.toRelative(enemyECs[0]);
+        rc.setFlag(Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
+        mode = ECMode.RUSHING;
+    }
+
     private void checkCommunications() {
-        for (int i = 0; i < scoutCount; i++) {
+        final Set<Integer> deadScouts = new HashSet<>();
+        for (final int id : scouts) {
             try {
-                final int flag = rc.getFlag(myScouts[i]);
+                final int flag = rc.getFlag(id);
 
                 if (Flags.getFlagType(flag) == Type.ENEMY_EC_FOUND) {
                     final int[] coords = Flags.getEnemyECFoundInfo(flag);
@@ -88,9 +114,12 @@ public class EnlightenmentCenter {
                 }
 
             } catch (final GameActionException e) {
-                System.out.println("Couldn't get scout flag: " + e);
+                System.out.println("Couldn't get scout flag, removing id: " + e);
+                deadScouts.add(id);
             }
         }
+
+        scouts.removeAll(deadScouts);
     }
 
     /**
