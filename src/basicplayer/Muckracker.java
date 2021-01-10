@@ -2,6 +2,7 @@ package basicplayer;
 
 import battlecode.common.*;
 import common.CoordinateSystem;
+import common.Directions;
 import common.Flags;
 import common.Pathfinding;
 
@@ -42,7 +43,7 @@ public class Muckracker  {
     }
 
     // Main execution loop
-    public void run() {
+    public void run() throws GameActionException {
         while (true) {
             if (isScout) {
                 try {
@@ -53,6 +54,7 @@ public class Muckracker  {
                 }
             } else {
                 liarLiarYourPantsAreOnFire();
+                Clock.yield();
             }
         }
     }
@@ -228,18 +230,14 @@ public class Muckracker  {
      * Attack mode.
      * This method will have the muckracker search for a slanderer attempt to slay it
      */
-    private void liarLiarYourPantsAreOnFire() {
-        while (true) {
-            RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
-            for (RobotInfo info : infos) {
-                if (info.type == RobotType.SLANDERER) {
-                    try {
-                        robotController.expose(info.location);
-                    } catch (GameActionException e) {
-
-                    }
-                }
+    private void liarLiarYourPantsAreOnFire() throws GameActionException {
+        RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2, enemyTeam);
+        for (RobotInfo info : infos) {
+            if (info.type == RobotType.SLANDERER) {
+                robotController.expose(info.location);
             }
         }
+
+        Pathfinding.tryMove(Directions.getRandomDirection(), robotController);
     }
 }
