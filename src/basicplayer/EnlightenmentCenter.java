@@ -76,15 +76,15 @@ public class EnlightenmentCenter implements Robot {
     }
 
     private static final Map<ECMode, RobotTypeDecider> typeDeciders = new HashMap() {{
-        put(ECMode.SCOUTING, new RobotTypeDecider(0, 2, 1));
-        put(ECMode.BUILDING, new RobotTypeDecider(1, 5, 1));
-        put(ECMode.RUSHING, new RobotTypeDecider(2, 1, 0));
+        put(ECMode.SCOUTING, new RobotTypeDecider(1, 2, 2));
+        put(ECMode.BUILDING, new RobotTypeDecider(2, 4, 1));
+        put(ECMode.RUSHING, new RobotTypeDecider(2, 1, 1));
     }};
 
     private static final int MAGIC_RUSH_TURN = 800;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
-        new TypeAndInfluence(RobotType.SLANDERER, 100),
+        new TypeAndInfluence(RobotType.SLANDERER, 146),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
