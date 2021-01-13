@@ -6,6 +6,7 @@ import common.Directions;
 import common.Flags;
 import common.Pathfinding;
 import common.Robot;
+import common.Planner;
 
 import java.util.ArrayList;
 
@@ -40,6 +41,8 @@ public class Muckracker implements Robot {
     private CoordinateSystem coordinateSystem;
     private MapLocation chokeSpot = null;
 
+    private Planner planner;
+
     Team enemyTeam = null;
 
     public Muckracker(RobotController robotController, Team enemyTeam, RobotInfo parent) {
@@ -47,6 +50,8 @@ public class Muckracker implements Robot {
         this.enemyTeam = enemyTeam;
         this.parent = parent;
         this.mode = MuckMode.SCOUT;
+
+        planner = new Planner( robotController, robotController.getLocation() );
 
         if (parent != null)
             this.coordinateSystem = new CoordinateSystem(parent.location);
@@ -133,7 +138,7 @@ public class Muckracker implements Robot {
 
     private void goHome() throws GameActionException {
         while (!seesHome()) {
-            Direction direction = Pathfinding.findPath(parent.location, robotController);
+            Direction direction = planner.getNextDirection( parent.location ); //Pathfinding.findPath(parent.location, robotController);
             robotController.move(direction);
             Clock.yield();
         }
@@ -304,7 +309,7 @@ public class Muckracker implements Robot {
      */
     private void blackOutTheSunMyChildren() throws GameActionException {
         //We have made it to our destination, or it is currently occupied so lets try to kill something
-        if (!Pathfinding.tryMove(Pathfinding.findPath(chokeSpot, robotController), robotController)) {
+        if (!planner.move(planner.getNextDirection(chokeSpot))) {
             RobotInfo[] infos = robotController.senseNearbyRobots(ACTION_R2, enemyTeam);
             for (RobotInfo info : infos) {
                 if (info.getType() == RobotType.SLANDERER) {
