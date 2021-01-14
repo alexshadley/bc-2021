@@ -197,9 +197,12 @@ public class EnlightenmentCenter implements Robot {
         if ( Logging.LOGGING ) {
             System.out.println("New enemy EC found: " + enemyECLocation);
         }
-        
-        enemyECs[enemyECCount] = enemyECLocation;
-        enemyECCount++;
+
+        // TODO: this is limited to 3 ECs
+        if ( enemyECCount < 3 ) {
+            enemyECs[enemyECCount] = enemyECLocation;
+            enemyECCount++;
+        }
     }
 
     private TypeAndInfluence getRobotToBuild(int robotCount) {
