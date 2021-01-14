@@ -1,8 +1,10 @@
 package basicplayer;
 
 import battlecode.common.*;
-import common.Pathfinding;
+
 import common.Directions;
+import common.Pathfinding;
+import common.Planner;
 import common.Robot;
 
 /**
@@ -25,6 +27,10 @@ public class Slanderer implements Robot {
     private static final int SENSOR_R2 = 20;
     private static final int DETECT_R2 = 20;
 
+    private Planner planner;
+
+    private Direction runningDirection;
+
     /**
      * Constructor for Slanderer
      * 
@@ -33,6 +39,9 @@ public class Slanderer implements Robot {
     public Slanderer(final RobotController robotController, final RobotInfo parent) {
         this.robotController = robotController;
         this.parent = parent;
+
+        planner = new Planner( robotController );
+        runningDirection = Directions.getRandomDirection();
     }
 
     /**
@@ -95,14 +104,11 @@ public class Slanderer implements Robot {
         }
 
         // Try to move in opposite direction
-        boolean cannotMove = false;
         if ( null != enemyLocation ) {
             Direction movementDir = currLocation.directionTo( enemyLocation );
-            cannotMove = Pathfinding.tryMove( movementDir.opposite(), robotController );
+            runningDirection = movementDir.opposite();
         }
-
-        if ( null == enemyLocation || cannotMove ) {
-            Pathfinding.tryMove( Directions.getRandomDirection(), robotController );
-        }
+        
+        planner.move( runningDirection );
     }
 }
