@@ -23,7 +23,7 @@ public class Planner {
     /**
      * Constructor to initialize planner with surrounding tiles
      */
-    public Planner( RobotController robotController, MapLocation currLocation ) {
+    public Planner( RobotController robotController ) {
         // Set robot controller
         this.robotController = robotController;
 
