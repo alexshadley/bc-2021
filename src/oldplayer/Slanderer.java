@@ -1,10 +1,8 @@
-package basicplayer;
+package oldplayer;
 
 import battlecode.common.*;
-
-import common.Directions;
 import common.Pathfinding;
-import common.Planner;
+import common.Directions;
 import common.Robot;
 
 /**
@@ -27,10 +25,6 @@ public class Slanderer implements Robot {
     private static final int SENSOR_R2 = 20;
     private static final int DETECT_R2 = 20;
 
-    private Planner planner;
-
-    private Direction runningDirection;
-
     /**
      * Constructor for Slanderer
      * 
@@ -39,9 +33,6 @@ public class Slanderer implements Robot {
     public Slanderer(final RobotController robotController, final RobotInfo parent) {
         this.robotController = robotController;
         this.parent = parent;
-
-        planner = new Planner( robotController );
-        runningDirection = Directions.getRandomDirection();
     }
 
     /**
@@ -89,21 +80,29 @@ public class Slanderer implements Robot {
         MapLocation enemyLocation = null;
 
         // Find closest enemy
+        // TODO: limit this.. if too many robots this will be quite the byte code count
         for ( RobotInfo robot : robotController.senseNearbyRobots( SENSOR_R2, enemy ) ) {
-            // Is this the closest enemy?
-            int distance = currLocation.distanceSquaredTo( robot.getLocation() );
-            if ( distance < minDistance ) {
-                minDistance = distance;
-                enemyLocation = robot.getLocation();
+            // Should I be worried about this enemy?
+            if ( RobotType.POLITICIAN == robot.type ||
+                 RobotType.MUCKRAKER == robot.type ) {
+                // Is this the closest enemy?
+                int distance = currLocation.distanceSquaredTo( robot.getLocation() );
+                if ( distance < minDistance ) {
+                    minDistance = distance;
+                    enemyLocation = robot.getLocation();
+                }
             }
         }
 
         // Try to move in opposite direction
+        boolean cannotMove = false;
         if ( null != enemyLocation ) {
             Direction movementDir = currLocation.directionTo( enemyLocation );
-            runningDirection = movementDir.opposite();
+            cannotMove = Pathfinding.tryMove( movementDir.opposite(), robotController );
         }
-        
-        planner.move( runningDirection );
+
+        if ( null == enemyLocation || cannotMove ) {
+            Pathfinding.tryMove( Directions.getRandomDirection(), robotController );
+        }
     }
 }
