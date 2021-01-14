@@ -89,17 +89,12 @@ public class Slanderer implements Robot {
         MapLocation enemyLocation = null;
 
         // Find closest enemy
-        // TODO: limit this.. if too many robots this will be quite the byte code count
         for ( RobotInfo robot : robotController.senseNearbyRobots( SENSOR_R2, enemy ) ) {
-            // Should I be worried about this enemy?
-            if ( RobotType.POLITICIAN == robot.type ||
-                 RobotType.MUCKRAKER == robot.type ) {
-                // Is this the closest enemy?
-                int distance = currLocation.distanceSquaredTo( robot.getLocation() );
-                if ( distance < minDistance ) {
-                    minDistance = distance;
-                    enemyLocation = robot.getLocation();
-                }
+            // Is this the closest enemy?
+            int distance = currLocation.distanceSquaredTo( robot.getLocation() );
+            if ( distance < minDistance ) {
+                minDistance = distance;
+                enemyLocation = robot.getLocation();
             }
         }
 
