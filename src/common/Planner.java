@@ -40,7 +40,13 @@ public class Planner {
     public Direction getNextDirection( MapLocation destination ) throws GameActionException {
         // Default to CENTER
         Direction nextDirection = Direction.CENTER;
+
+        // TODO: this is because Mukraker plans with null destination... need to fix that root cause I think
+        if ( null == destination ) {
+            return ( nextDirection );
+        } 
         
+
         if ( locations.isEmpty() ) {
             // Add adjacent robot tiles to queue
             for ( Direction direction : Directions.directions ) {

@@ -14,6 +14,7 @@ import common.EnlightenmentCenterUtils;
 import common.Flags;
 import common.Flags.Type;
 import common.Robot;
+import common.Logging;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -144,7 +145,9 @@ public class EnlightenmentCenter implements Robot {
 
     private void initiateRush() throws GameActionException {
         if (enemyECCount == 0) {
-            System.out.println("Failed to rush, no enemy ECs known");
+            if ( Logging.LOGGING ) {
+                System.out.println("Failed to rush, no enemy ECs known");
+            }
             return;
         }
 
@@ -170,7 +173,10 @@ public class EnlightenmentCenter implements Robot {
                 }
 
             } catch (final GameActionException e) {
-                System.out.println("Couldn't get scout flag, removing id: " + e);
+                // TODO: should we really be catching an exception here?
+                if ( Logging.LOGGING ) {
+                    System.out.println("Couldn't get scout flag, removing id: " + e);
+                }
                 deadScouts.add(id);
             }
         }
@@ -188,8 +194,10 @@ public class EnlightenmentCenter implements Robot {
             }
         }
 
-        System.out.println("New enemy EC found: " + enemyECLocation);
-
+        if ( Logging.LOGGING ) {
+            System.out.println("New enemy EC found: " + enemyECLocation);
+        }
+        
         enemyECs[enemyECCount] = enemyECLocation;
         enemyECCount++;
     }
