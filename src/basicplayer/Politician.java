@@ -44,7 +44,7 @@ public class Politician implements Robot {
         this.mode = PoliticanMode.ROAMING;
         this.enemy = rc.getTeam().opponent();
 
-        planner = new Planner( rc, rc.getLocation() );
+        planner = new Planner( rc );
     }
 
     /**

@@ -51,7 +51,7 @@ public class Muckracker implements Robot {
         this.parent = parent;
         this.mode = MuckMode.SCOUT;
 
-        planner = new Planner( robotController, robotController.getLocation() );
+        planner = new Planner( robotController );
 
         if (parent != null)
             this.coordinateSystem = new CoordinateSystem(parent.location);
