@@ -14,6 +14,7 @@ import common.Flags;
 import common.Flags.Type;
 import common.Pathfinding;
 import common.Robot;
+import common.Planner;
 
 public class Politician implements Robot {
     private static final int ACTION_R2 = 9;
@@ -32,6 +33,8 @@ public class Politician implements Robot {
     // only valid for RUSHING mode, indicates the coords of the base to rush
     private MapLocation rushCoords;
 
+    private Planner planner;
+
     private final Team enemy;
 
     public Politician(final RobotController rc, final RobotInfo parent) {
@@ -40,6 +43,8 @@ public class Politician implements Robot {
         this.coordinateSystem = new CoordinateSystem(parent.location);
         this.mode = PoliticanMode.ROAMING;
         this.enemy = rc.getTeam().opponent();
+
+        planner = new Planner( rc );
     }
 
     /**
@@ -54,7 +59,7 @@ public class Politician implements Robot {
                 Pathfinding.tryMove(Directions.getRandomDirection(), rc);
             } else {
                 rushAttack();
-                Pathfinding.tryMove(Pathfinding.findPath(rushCoords, rc), rc);
+                planner.move(planner.getNextDirection(rushCoords));
             }
 
             Clock.yield();
