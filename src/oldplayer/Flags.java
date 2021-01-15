@@ -1,4 +1,4 @@
-package common;
+package oldplayer;
 
 public class Flags {
     final static int TYPE_WIDTH = 8;

@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import static org.junit.Assert.assertEquals;
 

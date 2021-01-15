@@ -6,19 +6,11 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import common.Bidder;
-import common.BidderRunner;
-import common.ConstantBidder;
-import common.CoordinateSystem;
-import common.EnlightenmentCenterUtils;
-import common.Flags;
-import common.Flags.Type;
-import common.Robot;
-import common.Logging;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import oldplayer.Flags.Type;
 
 public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
@@ -145,7 +137,7 @@ public class EnlightenmentCenter implements Robot {
 
     private void initiateRush() throws GameActionException {
         if (enemyECCount == 0) {
-            if ( Logging.LOGGING ) {
+            if (Logging.LOGGING) {
                 System.out.println("Failed to rush, no enemy ECs known");
             }
 
@@ -175,7 +167,7 @@ public class EnlightenmentCenter implements Robot {
 
             } catch (final GameActionException e) {
                 // TODO: Should we really be trying to catch this as an exception?
-                if ( Logging.LOGGING ) {
+                if (Logging.LOGGING) {
                     System.out.println("Couldn't get scout flag, removing id: " + e);
                 }
 
@@ -196,12 +188,12 @@ public class EnlightenmentCenter implements Robot {
             }
         }
 
-        if ( Logging.LOGGING ) {
+        if (Logging.LOGGING) {
             System.out.println("New enemy EC found: " + enemyECLocation);
         }
-        
+
         // TODO: this is limited to 3 ECs
-        if ( enemyECCount < 3 ) {
+        if (enemyECCount < 3) {
             enemyECs[enemyECCount] = enemyECLocation;
             enemyECCount++;
         }

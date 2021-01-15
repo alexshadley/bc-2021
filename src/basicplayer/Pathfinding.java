@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;

@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

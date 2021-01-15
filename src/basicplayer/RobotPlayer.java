@@ -1,11 +1,8 @@
 package basicplayer;
 
-import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.Team;
-import common.Robot;
-import common.Startup;
 
 /**
  * This is just examplefuncsplayer except ECs bid 1 each turn

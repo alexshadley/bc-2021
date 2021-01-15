@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

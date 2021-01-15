@@ -1,13 +1,13 @@
 package oldplayer;
 
-import battlecode.common.*;
-import common.CoordinateSystem;
-import common.Directions;
-import common.Flags;
-import common.Pathfinding;
-import common.Robot;
-import common.Logging;
-
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
 import java.util.ArrayList;
 
 /**

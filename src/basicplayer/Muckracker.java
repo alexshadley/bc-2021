@@ -1,13 +1,6 @@
 package basicplayer;
 
 import battlecode.common.*;
-import common.CoordinateSystem;
-import common.Directions;
-import common.Flags;
-import common.Pathfinding;
-import common.Robot;
-import common.Planner;
-import common.Logging;
 
 import java.util.ArrayList;
 

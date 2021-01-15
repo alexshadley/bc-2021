@@ -1,6 +1,6 @@
 package examplefuncsplayer;
 import battlecode.common.*;
-import common.Logging;
+import basicplayer.Logging;
 
 public strictfp class RobotPlayer {
     static RobotController rc;

@@ -2,12 +2,6 @@ package basicplayer;
 
 import battlecode.common.*;
 
-import common.Directions;
-import common.Pathfinding;
-import common.Planner;
-import common.Robot;
-import common.Logging;
-
 /**
  * Slanderers
  * 

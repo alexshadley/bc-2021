@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 public class ConstantBidder implements Bidder {
     private final int bid;
