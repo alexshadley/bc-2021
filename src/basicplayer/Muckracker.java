@@ -84,9 +84,10 @@ public class Muckracker implements Robot {
                                 mode = MuckMode.MUCKMAKER;
                             } else {
                                 chokeSpot = openSpots.get((int) (Math.random() % openSpots.size()));
+                                blackOutTheSunMyChildren();
                             }
                         }
-                        blackOutTheSunMyChildren();
+
                         break;
                     case SEARCH:
                         scan();
@@ -94,8 +95,13 @@ public class Muckracker implements Robot {
                     default:
                         //do nothing
                 }
-            } catch (GameActionException e) {
+            } catch (GameActionException e) { }
+
+            //Kill switch, in case we are choking out the map
+            if (robotController.getRoundNum() >= 1250 && robotController.getInfluence() < 5) {
+                return;
             }
+
             Clock.yield();
         }
     }
@@ -336,21 +342,21 @@ public class Muckracker implements Robot {
             }
         }
         //Check east
-        if(robotController.canSenseLocation(enemyEC.translate(1,0))) {
+        if (robotController.canSenseLocation(enemyEC.translate(1,0))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(1, 0), 0, enemyTeam);
             if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
         //Check south
-        if(robotController.canSenseLocation(enemyEC.translate(0,-1))) {
+        if (robotController.canSenseLocation(enemyEC.translate(0,-1))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(0, -1), 0, enemyTeam);
             if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
             }
         }
         //Check west
-        if(robotController.canSenseLocation(enemyEC.translate(-1,0))) {
+        if (robotController.canSenseLocation(enemyEC.translate(-1,0))) {
             info = robotController.senseNearbyRobots(enemyEC.translate(-1, 0), 0, enemyTeam);
             if (info.length != 0 && info[0].getTeam() == enemyTeam) {
                 openSpots.add(info[0].getLocation());
