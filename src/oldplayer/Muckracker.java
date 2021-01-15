@@ -6,6 +6,7 @@ import common.Directions;
 import common.Flags;
 import common.Pathfinding;
 import common.Robot;
+import common.Logging;
 
 import java.util.ArrayList;
 
@@ -72,7 +73,10 @@ public class Muckracker implements Robot {
                         }
                         break;
                     case CHOKER:
-                        System.out.println("We are attempting to choke");
+                        if ( Logging.LOGGING ) {
+                            System.out.println("We are attempting to choke");
+                        }
+
                         if (chokeSpot == null) {
                             ArrayList<MapLocation> openSpots = chokeSpots();
                             if (openSpots == null) {
@@ -178,7 +182,11 @@ public class Muckracker implements Robot {
 
     private void setEnemyHQFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
+
+        if ( Logging.LOGGING ) {        
+            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
+        }
+
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 
