@@ -1,4 +1,4 @@
-package common;
+package oldplayer;
 
 public class LinearBidder implements Bidder {
     static int MAX_NUM_TIMES_USED_MIN = 10;

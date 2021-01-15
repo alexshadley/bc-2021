@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import battlecode.common.MapLocation;
 

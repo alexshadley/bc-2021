@@ -1,20 +1,13 @@
 package basicplayer;
 
 import battlecode.common.Clock;
-import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.Team;
-import common.CoordinateSystem;
-import common.Directions;
-import common.Flags;
-import common.Flags.Type;
-import common.Pathfinding;
-import common.Robot;
-import common.Planner;
+import basicplayer.Flags.Type;
 
 public class Politician implements Robot {
     private static final int ACTION_R2 = 9;
@@ -40,7 +33,13 @@ public class Politician implements Robot {
     public Politician(final RobotController rc, final RobotInfo parent) {
         this.rc = rc;
         this.parent = parent;
-        this.coordinateSystem = new CoordinateSystem(parent.location);
+
+        if ( null == parent ) {
+            this.coordinateSystem = null;
+        } else {
+            this.coordinateSystem = new CoordinateSystem(parent.location);
+        }
+
         this.mode = PoliticanMode.ROAMING;
         this.enemy = rc.getTeam().opponent();
 
@@ -52,11 +51,13 @@ public class Politician implements Robot {
      **/
     public void run() throws GameActionException {
         while (true) {
-            checkCommunications();
+            if ( null != parent ) {
+                checkCommunications();
+            }
 
             if (mode == PoliticanMode.ROAMING) {
                 attackIfPossible();
-                Pathfinding.tryMove(Directions.getRandomDirection(), rc);
+                planner.move(Directions.getRandomDirection());
             } else {
                 rushAttack();
                 planner.move(planner.getNextDirection(rushCoords));
@@ -69,13 +70,17 @@ public class Politician implements Robot {
     private void checkCommunications() throws GameActionException {
         // don't check while rushing to save bytecode
         if (mode != PoliticanMode.RUSHING) {
-            final int parentFlag = rc.getFlag(parent.ID);
-            if (Flags.getFlagType(parentFlag) == Type.ATTACK_ENEMY_EC) {
-                System.out.println("Recieved attack orders from EC");
-                this.mode = PoliticanMode.RUSHING;
+            if ( rc.canGetFlag( parent.ID ) ) {
+                final int parentFlag = rc.getFlag(parent.ID);
+                if (Flags.getFlagType(parentFlag) == Type.ATTACK_ENEMY_EC) {
+                    if ( Logging.LOGGING ) {
+                        System.out.println("Recieved attack orders from EC");
+                    }
+                    this.mode = PoliticanMode.RUSHING;
 
-                final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
-                this.rushCoords = coordinateSystem.toAbsolute(coords[0], coords[1]);
+                    final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
+                    this.rushCoords = coordinateSystem.toAbsolute(coords[0], coords[1]);
+                }
             }
         }
     }
@@ -103,14 +108,18 @@ public class Politician implements Robot {
         final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         for (final RobotInfo target : attackable) {
             if (target.type == RobotType.ENLIGHTENMENT_CENTER) {
-                System.out.println("Enemy EC found, attacking");
+                if ( Logging.LOGGING ) {
+                    System.out.println("Enemy EC found, attacking");
+                }
                 attemptAttack(actionRadius);
                 return;
             }
         }
 
         if (attackable.length >= 5) {
-            System.out.println("Overwhelmed, attacking");
+            if ( Logging.LOGGING ) {
+                System.out.println("Overwhelmed, attacking");
+            }
             attemptAttack(actionRadius);
         }
     }

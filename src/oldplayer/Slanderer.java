@@ -1,9 +1,13 @@
 package oldplayer;
 
-import battlecode.common.*;
-import common.Pathfinding;
-import common.Directions;
-import common.Robot;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
 
 /**
  * Slanderers
@@ -42,7 +46,9 @@ public class Slanderer implements Robot {
         while ( true ) {
             // if we've become a politician, switch to that code
             if (robotController.getType() == RobotType.POLITICIAN) {
-                System.out.println("I've become a politican, transitioning");
+                if ( Logging.LOGGING ) {
+                    System.out.println("I've become a politican, transitioning");
+                }
                 final Politician politician = new Politician(robotController, parent);
                 politician.run();
                 return;

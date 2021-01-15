@@ -1,11 +1,10 @@
-package common;
-
-import java.util.PriorityQueue;
+package oldplayer;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import java.util.PriorityQueue;
 
 /**
  * Planner class for slightly advanced pathfinding
@@ -40,7 +39,13 @@ public class Planner {
     public Direction getNextDirection( MapLocation destination ) throws GameActionException {
         // Default to CENTER
         Direction nextDirection = Direction.CENTER;
+
+        // TODO: this is because Mukraker plans with null destination... need to fix that root cause I think
+        if ( null == destination ) {
+            return ( nextDirection );
+        } 
         
+
         if ( locations.isEmpty() ) {
             // Add adjacent robot tiles to queue
             for ( Direction direction : Directions.directions ) {

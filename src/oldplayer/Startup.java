@@ -1,4 +1,4 @@
-package common;
+package oldplayer;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -21,6 +21,11 @@ public class Pathfinding {
      * @return the next step in the path
      */
     public static Direction findPath(MapLocation destination, RobotController robotController) {
+        // TODO: Why do we need this?
+        if ( destination == null ) {
+            return ( Direction.CENTER );
+        }
+
         final int dx = destination.x - robotController.getLocation().x;
         final int dy = destination.y - robotController.getLocation().y;
 

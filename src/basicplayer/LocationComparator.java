@@ -1,4 +1,4 @@
-package common;
+package basicplayer;
 
 import java.util.Comparator;
 

@@ -2,11 +2,6 @@ package basicplayer;
 
 import battlecode.common.*;
 
-import common.Directions;
-import common.Pathfinding;
-import common.Planner;
-import common.Robot;
-
 /**
  * Slanderers
  * 
@@ -51,7 +46,9 @@ public class Slanderer implements Robot {
         while ( true ) {
             // if we've become a politician, switch to that code
             if (robotController.getType() == RobotType.POLITICIAN) {
-                System.out.println("I've become a politican, transitioning");
+                if ( Logging.LOGGING ) {
+                    System.out.println("I've become a politican, transitioning");
+                }
                 final Politician politician = new Politician(robotController, parent);
                 politician.run();
                 return;
