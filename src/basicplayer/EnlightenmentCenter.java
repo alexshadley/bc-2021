@@ -7,10 +7,13 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 import basicplayer.Flags.Type;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
@@ -29,35 +32,43 @@ public class EnlightenmentCenter implements Robot {
         }
     }
 
-    private static class RobotTypeDecider {
-        public final int politicianFrequency;
-        public final int slandererFrequency;
-        public final int muckrackerFrequency;
+    private static class TypeAndInfluenceFunction {
+        public final RobotType robotType;
+        public final Function<Integer, Integer> influenceFunction;
 
-        private int next = 0;
-
-        public RobotTypeDecider(final int politicianFrequency,
-                                final int slandererFrequency,
-                                final int muckrackerFrequency) {
-
-            this.politicianFrequency = politicianFrequency;
-            this.slandererFrequency = slandererFrequency;
-            this.muckrackerFrequency = muckrackerFrequency;
+        public TypeAndInfluenceFunction(final RobotType robotType, final Function<Integer, Integer> influenceFunction) {
+            this.robotType = robotType;
+            this.influenceFunction = influenceFunction;
         }
 
-        public RobotType next() {
-            if (next < politicianFrequency) {
-                next++;
-                return RobotType.POLITICIAN;
-            } else if (next < politicianFrequency + slandererFrequency) {
-                next++;
-                return RobotType.SLANDERER;
-            } else if (next < politicianFrequency + slandererFrequency + muckrackerFrequency) {
-                next++;
-                return RobotType.MUCKRAKER;
+        public TypeAndInfluence toTypeAndInfluence(final int ecInfluence) {
+            return new TypeAndInfluence(
+                robotType,
+                influenceFunction.apply(ecInfluence)
+            );
+        }
+    }
+
+    private static class RobotTypeDecider {
+        private final List<TypeAndInfluenceFunction> options;
+        private final List<Integer> frequencies;
+
+        private int currentOption = 0;
+        private int unitsOfOptionMade = 0;
+
+        public RobotTypeDecider(final List<TypeAndInfluenceFunction> options, final List<Integer> frequencies) {
+            this.options = options;
+            this.frequencies = frequencies;
+        }
+
+        public TypeAndInfluence next(final int ecInfluence) {
+            if (unitsOfOptionMade < frequencies.get(currentOption)) {
+                unitsOfOptionMade++;
+                return options.get(currentOption).toTypeAndInfluence(ecInfluence);
             } else {
-                next = 0;
-                return next();
+                currentOption = (currentOption + 1) % options.size();
+                unitsOfOptionMade = 0;
+                return next(ecInfluence);
             }
         }
     }
@@ -68,23 +79,50 @@ public class EnlightenmentCenter implements Robot {
         RUSHING
     }
 
+    private static final List<TypeAndInfluenceFunction> scoutingOptions = Arrays.asList(
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> 40),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
+    );
+    private static final List<Integer> scoutingFrequencies = Arrays.asList(2, 0, 3, 5);
+
+    private static final List<TypeAndInfluenceFunction> buildingOptions = Arrays.asList(
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
+    );
+    private static final List<Integer> buildingFrequencies = Arrays.asList(1, 1, 1, 1);
+
+    private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
+    );
+    private static final List<Integer> rushingFrequencies = Arrays.asList(3, 1, 1);
+
     private static final Map<ECMode, RobotTypeDecider> typeDeciders = new HashMap() {{
-        put(ECMode.SCOUTING, new RobotTypeDecider(1, 2, 2));
-        put(ECMode.BUILDING, new RobotTypeDecider(2, 4, 1));
-        put(ECMode.RUSHING, new RobotTypeDecider(2, 1, 1));
+        put(ECMode.SCOUTING, new RobotTypeDecider(scoutingOptions, scoutingFrequencies));
+        put(ECMode.BUILDING, new RobotTypeDecider(buildingOptions, buildingFrequencies));
+        put(ECMode.RUSHING, new RobotTypeDecider(rushingOptions, rushingFrequencies));
     }};
 
     private static final int MAGIC_RUSH_TURN = 800;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
-        new TypeAndInfluence(RobotType.SLANDERER, 146),
+        new TypeAndInfluence(RobotType.SLANDERER, 130),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1)
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.POLITICIAN, Politician.GUARD_POLITICAN_SIZE),
+        new TypeAndInfluence(RobotType.SLANDERER, 85),
+        new TypeAndInfluence(RobotType.SLANDERER, 85)
     };
 
-    private static final Bidder bidder = new ConstantBidder(1);
+    private static final Bidder constantBidder = new ConstantBidder(1);
+    private static final Bidder adaptiveBidder = new LinearBidder(5, 5, 50);
 
     private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
@@ -99,6 +137,9 @@ public class EnlightenmentCenter implements Robot {
 
     private MapLocation[] enemyECs = new MapLocation[3];
     private int enemyECCount = 0;
+
+    // has a value if we want to make something but don't have influence yet. Otherwise null
+    private TypeAndInfluence nextToBuild;
 
     public EnlightenmentCenter(final RobotController rc) {
         this.rc = rc;
@@ -117,21 +158,44 @@ public class EnlightenmentCenter implements Robot {
                 initiateRush();
             }
 
-            final TypeAndInfluence next = getRobotToBuild(robotCount);
+            buildRobot();
 
-            for (final Direction dir : Direction.allDirections()) {
-                if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
-                    final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
-                    myRobots[robotCount] = robotId;
-                    robotCount++;
-                    if (next.robotType == RobotType.MUCKRAKER) {
-                        scouts.add(robotId);
-                    }
-                }
+            if (rc.getInfluence() >= 200) {
+                bidderRunner.attemptBid(rc, adaptiveBidder);
+            } else {
+                bidderRunner.attemptBid(rc, constantBidder);
             }
-
-            bidderRunner.attemptBid(rc, bidder);
             Clock.yield();
+        }
+    }
+
+    private void buildRobot() throws GameActionException {
+        final TypeAndInfluence next;
+        if (nextToBuild == null) {
+            next = getRobotToBuild(robotCount, rc.getInfluence());
+            System.out.println("Will build " + next.robotType + " at " + next.influence);
+        } else {
+            next = nextToBuild;
+        }
+
+        boolean unitBuilt = false;
+        for (final Direction dir : Direction.allDirections()) {
+            if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
+                final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
+                myRobots[robotCount] = robotId;
+                robotCount++;
+                if (next.robotType == RobotType.MUCKRAKER) {
+                    scouts.add(robotId);
+                }
+                unitBuilt = true;
+                break;
+            }
+        }
+
+        if (unitBuilt) {
+            nextToBuild = null;
+        } else {
+            nextToBuild = next;
         }
     }
 
@@ -197,19 +261,11 @@ public class EnlightenmentCenter implements Robot {
         }
     }
 
-    private TypeAndInfluence getRobotToBuild(int robotCount) {
+    private TypeAndInfluence getRobotToBuild(final int robotCount, final int ecInfluence) {
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {
-            final RobotType type = typeDeciders.get(mode).next();
-            final int influence = type == RobotType.MUCKRAKER
-                ? 1
-                : Math.max(50, rc.getInfluence() / 4);
-
-            return new TypeAndInfluence(
-                type,
-                influence
-            );
+            return typeDeciders.get(mode).next(ecInfluence);
         }
     }
 
