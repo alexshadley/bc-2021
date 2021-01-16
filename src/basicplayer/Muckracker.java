@@ -58,7 +58,7 @@ public class Muckracker implements Robot {
             RobotInfo closestSlanderer = getClosestSlanderer();
 
             if (closestSlanderer != null) {
-                if (Directions.distanceTo(closestSlanderer.getLocation(), robotController.getLocation()) <= ACTION_R2) {
+                if (robotController.canExpose(closestSlanderer.getID())) {
                     robotController.expose(closestSlanderer.getLocation());
                 }
             }

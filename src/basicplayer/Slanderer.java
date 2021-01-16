@@ -99,6 +99,8 @@ public class Slanderer implements Robot {
         if ( null != enemyLocation ) {
             Direction movementDir = currLocation.directionTo( enemyLocation );
             runningDirection = movementDir.opposite();
+        } else {
+            runningDirection = Directions.getRandomDirection();
         }
         
         planner.move( runningDirection );

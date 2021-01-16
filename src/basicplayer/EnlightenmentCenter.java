@@ -173,7 +173,9 @@ public class EnlightenmentCenter implements Robot {
         final TypeAndInfluence next;
         if (nextToBuild == null) {
             next = getRobotToBuild(robotCount, rc.getInfluence());
-            System.out.println("Will build " + next.robotType + " at " + next.influence);
+            if ( Logging.LOGGING ) {
+                System.out.println("Will build " + next.robotType + " at " + next.influence);
+            }
         } else {
             next = nextToBuild;
         }
