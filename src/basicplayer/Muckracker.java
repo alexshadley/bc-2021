@@ -36,14 +36,16 @@ public class Muckracker implements Robot {
     private MapLocation chokeSpot = null;
 
     private Planner planner;
+    private final Direction scoutDir;
 
     Team enemyTeam = null;
 
-    public Muckracker(RobotController robotController, Team enemyTeam, RobotInfo parent) {
+    public Muckracker(RobotController robotController, Team enemyTeam, RobotInfo parent, Direction scoutDir) {
         this.robotController = robotController;
         this.enemyTeam = enemyTeam;
         this.parent = parent;
         this.mode = MuckMode.SCOUT;
+        this.scoutDir = scoutDir;
 
         planner = new Planner( robotController );
 
@@ -104,38 +106,16 @@ public class Muckracker implements Robot {
     }
 
     /**
-     * From what I've seen map creation doesn't get too crazy so as a start:
-     *  if we are red go east
-     *  if we are blue go west
-     *  If we hit the edge of the map then we just scan
+     * Walks to the edge of the map and then scans for an enemy EC
+     * @throws GameActionException if we can't move somewhere
      */
     private void goScouting() throws GameActionException {
-        // if we are red go east
-        if (enemyTeam.equals(Team.B)) {
-            if (robotController.canMove(Direction.EAST)) {
-                robotController.move(Direction.EAST);
-            } else if (robotController.canMove(Direction.NORTHEAST)) {
-                robotController.move(Direction.NORTHEAST);
-            } else if (robotController.canMove(Direction.SOUTHEAST)) {
-                robotController.move(Direction.SOUTHEAST);
-            }
-
-            if (!robotController.onTheMap(robotController.getLocation().translate(5, 0))) {
-                mode = MuckMode.SEARCH;
-            }
-
-        } else {
-            if (robotController.canMove(Direction.WEST)) {
-                robotController.move(Direction.WEST);
-            } else if (robotController.canMove(Direction.NORTHWEST)) {
-                robotController.move(Direction.NORTHWEST);
-            } else if (robotController.canMove(Direction.SOUTHWEST)) {
-                robotController.move(Direction.SOUTHWEST);
-            }
-
-            if (!robotController.onTheMap(robotController.getLocation().translate(-5, 0))) {
-                mode = MuckMode.SEARCH;
-            }
+        if (liarLiarImNotMovingYoureStillOnFire()) {
+            //no-op
+        } else if (robotController.canMove(scoutDir)) {
+            robotController.move(scoutDir);
+        } else if (!robotController.onTheMap(robotController.getLocation().translate(scoutDir.dx, scoutDir.dy))) {
+            mode = MuckMode.SEARCH;
         }
     }
 
@@ -162,7 +142,7 @@ public class Muckracker implements Robot {
                     setEnemyHQFlag(enemyEC);
                     return true;
                 } else {
-                    //Neutral EC
+                    setNeutralEC(robot.getLocation(), robot.getConviction());
                     return false;
                 }
             }
@@ -281,6 +261,21 @@ public class Muckracker implements Robot {
         } else {
             Pathfinding.tryMove(Directions.getRandomDirection(), robotController);
         }
+    }
+
+    /**
+     * Kills a nearby slanderer, does not do any movement
+     */
+    private boolean liarLiarImNotMovingYoureStillOnFire() throws GameActionException {
+        RobotInfo closestSlanderer = getClosestSlanderer();
+
+        if (closestSlanderer != null) {
+            if (Directions.distanceTo(closestSlanderer.getLocation(), robotController.getLocation()) <= ACTION_R2) {
+                robotController.expose(closestSlanderer.getLocation());
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
