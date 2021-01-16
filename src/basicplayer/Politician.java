@@ -11,7 +11,7 @@ import battlecode.common.Team;
 import java.util.Arrays;
 
 public class Politician implements Robot {
-    public static final int GUARD_POLITICAN_SIZE = 15;
+    public static final int GUARD_POLITICAN_SIZE = 30;
 
     private static final int ACTION_R2 = 9;
     private static final int SENSOR_R2 = 25;
@@ -104,13 +104,16 @@ public class Politician implements Robot {
 
         // if we're right on top of it then just blow up, we don't want to lock up
         if (nearestMuckDistSquared <= 2) {
+            if ( Logging.LOGGING ) {
+                System.out.println("Right on top of enemy muckraker, attacking");
+            }
             rc.empower(nearestMuckDistSquared);
             return;
         }
 
         // see if we can attack the muckraker effectively
         final int blastRadiusAllies = rc.senseNearbyRobots(nearestMuckDistSquared, enemy.opponent()).length;
-        if (blastRadiusAllies <= 1) {
+        if (blastRadiusAllies <= 1 && rc.canEmpower(nearestMuckDistSquared)) {
             if ( Logging.LOGGING ) {
                 System.out.println("Able to attack enemy muckraker");
             }

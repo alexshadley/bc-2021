@@ -54,6 +54,15 @@ public class Muckracker implements Robot {
     // Main execution loop
     public void run() throws GameActionException {
         while (true) {
+            // TODO: remove this big hack
+            RobotInfo closestSlanderer = getClosestSlanderer();
+
+            if (closestSlanderer != null) {
+                if (Directions.distanceTo(closestSlanderer.getLocation(), robotController.getLocation()) <= ACTION_R2) {
+                    robotController.expose(closestSlanderer.getLocation());
+                }
+            }
+
             try {
                 switch (mode) {
                     case SCOUT:

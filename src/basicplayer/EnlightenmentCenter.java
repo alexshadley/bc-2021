@@ -82,10 +82,10 @@ public class EnlightenmentCenter implements Robot {
     private static final List<TypeAndInfluenceFunction> scoutingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> 40),
-        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 40),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
-    private static final List<Integer> scoutingFrequencies = Arrays.asList(2, 0, 3, 5);
+    private static final List<Integer> scoutingFrequencies = Arrays.asList(1, 0, 2, 5);
 
     private static final List<TypeAndInfluenceFunction> buildingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
@@ -93,7 +93,7 @@ public class EnlightenmentCenter implements Robot {
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
-    private static final List<Integer> buildingFrequencies = Arrays.asList(1, 1, 1, 1);
+    private static final List<Integer> buildingFrequencies = Arrays.asList(1, 1, 2, 1);
 
     private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
@@ -117,8 +117,8 @@ public class EnlightenmentCenter implements Robot {
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.POLITICIAN, Politician.GUARD_POLITICAN_SIZE),
-        new TypeAndInfluence(RobotType.SLANDERER, 85),
-        new TypeAndInfluence(RobotType.SLANDERER, 85)
+        new TypeAndInfluence(RobotType.SLANDERER, 40),
+        new TypeAndInfluence(RobotType.SLANDERER, 40)
     };
 
     private static final Bidder constantBidder = new ConstantBidder(1);
