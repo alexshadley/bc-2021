@@ -39,6 +39,10 @@ public class Politician implements Robot {
 
     private final Team enemy;
 
+    // we wait some turns before attacking
+    private static final int TIME_TO_WAIT = 1;
+    private int timeWaited = 0;
+
     public Politician(final RobotController rc, final RobotInfo parent) {
         this.rc = rc;
         this.parent = parent;
@@ -89,70 +93,84 @@ public class Politician implements Robot {
         if (rc.getCooldownTurns() >= 1) {
             return;
         }
-        final RobotInfo nearestMuck = nearestEnemyMuckraker();
+        final RobotInfo furthestMuck = furthestEnemyMuckrakerInRange();
 
         // if we don't see any enemy muckrakers, just amble about
-        if (nearestMuck == null) {
-            if ( Logging.LOGGING ) {
-                System.out.println("No nearest muckraker");
+        if (furthestMuck == null) {
+            // see if there's a muckraker in sensors range at all
+            final RobotInfo anyMuck = anyMuckraker();
+            if (anyMuck != null) {
+                if (Logging.LOGGING) {
+                    System.out.println("Found muckraker out of empower range, moving in");
+                }
+                planner.move(planner.getNextDirection(anyMuck.location));
+                return;
+            }
+
+            if (Logging.LOGGING) {
+                System.out.println("No nearby muckraker");
             }
             planner.move(Directions.getRandomDirection());
             return;
         }
 
-        final int nearestMuckDistSquared = rc.getLocation().distanceSquaredTo(nearestMuck.location);
-
-        // if we're right on top of it then just blow up, we don't want to lock up
-        if (nearestMuckDistSquared <= 2) {
-            if ( Logging.LOGGING ) {
-                System.out.println("Right on top of enemy muckraker, attacking");
-            }
-            rc.empower(nearestMuckDistSquared);
-            return;
-        }
+        final int furthestMuckDistSquared = rc.getLocation().distanceSquaredTo(furthestMuck.location);
 
         // see if we can attack the muckraker effectively
-        final int blastRadiusAllies = rc.senseNearbyRobots(nearestMuckDistSquared, enemy.opponent()).length;
-        if (blastRadiusAllies <= 1 && rc.canEmpower(nearestMuckDistSquared)) {
-            if ( Logging.LOGGING ) {
+        final int blastRadiusAllies = rc.senseNearbyRobots(furthestMuckDistSquared, enemy.opponent()).length;
+        if (blastRadiusAllies <= 3 && timeWaited >= TIME_TO_WAIT) {
+            if (Logging.LOGGING) {
                 System.out.println("Able to attack enemy muckraker");
             }
-            rc.empower(nearestMuckDistSquared);
+            rc.empower(furthestMuckDistSquared);
             return;
+        } else {
+            timeWaited++;
         }
 
-        // if we couldn't attack the nearest muckraker, get closer
-        if ( Logging.LOGGING ) {
+        // if we couldn't attack muckraker, get closer
+        if (Logging.LOGGING) {
             System.out.println("Moving in on enemy muckraker");
         }
-        planner.move(planner.getNextDirection(nearestMuck.location));
+        planner.move(planner.getNextDirection(furthestMuck.location));
     }
 
-    private RobotInfo nearestEnemyMuckraker() {
+    private RobotInfo anyMuckraker() {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(
             RobotType.POLITICIAN.sensorRadiusSquared,
             enemy);
 
+        return Arrays.stream(enemyRobots)
+            .filter(robot -> robot.type == RobotType.MUCKRAKER)
+            .findAny().orElse(null);
+    }
+
+    private RobotInfo furthestEnemyMuckrakerInRange() {
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(
+            RobotType.POLITICIAN.sensorRadiusSquared,
+            enemy);
+
+        final MapLocation myLocation = rc.getLocation();
         RobotInfo[] enemyMuckrakers = Arrays.stream(enemyRobots)
             .filter(robot -> robot.type == RobotType.MUCKRAKER)
+            .filter(robot ->
+                robot.location.isWithinDistanceSquared(myLocation, RobotType.POLITICIAN.actionRadiusSquared))
             .toArray(RobotInfo[]::new);
 
         if (enemyMuckrakers.length == 0) {
             return null;
         }
 
-        final MapLocation myLocation = rc.getLocation();
-
-        RobotInfo closest = enemyMuckrakers[0];
-        int distanceSquared = myLocation.distanceSquaredTo(closest.location);
+        RobotInfo furthest = enemyMuckrakers[0];
+        int distanceSquared = myLocation.distanceSquaredTo(furthest.location);
         for (final RobotInfo robot : enemyMuckrakers) {
-            if (myLocation.distanceSquaredTo(robot.location) < distanceSquared) {
-                closest = robot;
+            if (myLocation.distanceSquaredTo(robot.location) > distanceSquared) {
+                furthest = robot;
                 distanceSquared = myLocation.distanceSquaredTo(robot.location);
             }
         }
 
-        return closest;
+        return furthest;
     }
 
     private void checkCommunications() throws GameActionException {
