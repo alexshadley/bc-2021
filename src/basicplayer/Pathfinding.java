@@ -123,10 +123,11 @@ public class Pathfinding {
     }
 
     /**
-     * idk another one that takes a dir instead of a map location
-     * @param direction
-     * @param robotController
-     * @throws GameActionException
+     * Does a check to see if we can move, then moves.
+     * Performs a Clock.yield
+     * @param direction the direction we want to move
+     * @param robotController the robot we are trying to move
+     * @throws GameActionException if we cant move? Idk
      */
     public static void move(Direction direction, RobotController robotController) throws GameActionException {
         if (robotController.canMove(direction)) {
