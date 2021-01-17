@@ -64,11 +64,17 @@ public class MuckrackerV2 implements Robot{
         while(true) {
             switch (mode) {
                 case SCOUT:
-                    System.out.println("Case SCOUT\n");
+                    if ( Logging.LOGGING ) {
+                        System.out.println("Case SCOUT\n");
+                    }
+
                     scout();
                     break;
                 case SCAN:
-                    System.out.println("Case SCAN\n");
+                    if ( Logging.LOGGING ) {
+                        System.out.println("Case SCAN\n");
+                    }
+
                     scan();
                     break;
                 case CHOKE:
@@ -103,7 +109,7 @@ public class MuckrackerV2 implements Robot{
 
     private boolean tryKill() throws GameActionException {
         RobotInfo enemyLiar = getClosestSlanderer();
-        if (enemyLiar != null && Directions.distanceTo(enemyLiar.location, robotController.getLocation()) <= ACTION_R2) {
+        if (enemyLiar != null && robotController.canExpose(enemyLiar.getID())) {
             robotController.expose(enemyLiar.getLocation());
             return true;
         }
@@ -199,7 +205,10 @@ public class MuckrackerV2 implements Robot{
 
         switch (scanDir) {
             case NORTH:
-                System.out.println("case NORTH");
+                if ( Logging.LOGGING ) {
+                    System.out.println("case NORTH");
+                }
+
                 if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
@@ -211,7 +220,10 @@ public class MuckrackerV2 implements Robot{
                 }
                 break;
             case SOUTH:
-                System.out.println("case SOUTH");
+                if ( Logging.LOGGING ) {
+                    System.out.println("case SOUTH");
+                }
+
                 if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
@@ -224,7 +236,10 @@ public class MuckrackerV2 implements Robot{
                 break;
             case EAST:
             case WEST:
-                System.out.println("case " + scanDir);
+                if ( Logging.LOGGING ) {
+                    System.out.println("case " + scanDir);
+                }
+
                 electricSlide();
                 break;
             default:
@@ -236,12 +251,18 @@ public class MuckrackerV2 implements Robot{
         if (scanDirCount >=14) {
             switch (lastVerticalScanDir) {
                 case NORTH:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    if ( Logging.LOGGING ) {
+                        System.out.println("last scan " + lastVerticalScanDir);
+                    }
+
                     lastVerticalScanDir = scanDir = Direction.SOUTH;
                     break;
                 case SOUTH:
                 default:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    if ( Logging.LOGGING ) {
+                        System.out.println("last scan " + lastVerticalScanDir);
+                    }
+
                     lastVerticalScanDir = scanDir = Direction.NORTH;
                     break;
             }
@@ -253,12 +274,18 @@ public class MuckrackerV2 implements Robot{
             goEast = !goEast;
             switch (lastVerticalScanDir) {
                 case NORTH:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    if ( Logging.LOGGING ) {
+                        System.out.println("last scan " + lastVerticalScanDir);
+                    }
+
                     lastVerticalScanDir = scanDir = Direction.SOUTH;
                     break;
                 case SOUTH:
                 default:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    if ( Logging.LOGGING ) {
+                        System.out.println("last scan " + lastVerticalScanDir);
+                    }
+
                     lastVerticalScanDir = scanDir = Direction.NORTH;
                     break;
             }
@@ -266,7 +293,10 @@ public class MuckrackerV2 implements Robot{
             scanDirCount = 0;
         } else {
             Pathfinding.moveNoYield(scanDir, robotController);
-            System.out.println("Move count " + scanDirCount);
+            if ( Logging.LOGGING ) {
+                System.out.println("Move count " + scanDirCount);
+            }
+
             scanDirCount += 1;
         }
     }
@@ -274,16 +304,25 @@ public class MuckrackerV2 implements Robot{
     private void choke() throws GameActionException {
         //If we are too far away move closer
         if (Directions.distanceTo(enemyEC, robotController.getLocation()) > 12) {
-            System.out.println("Moving closer to enemy EC\n");
+            if ( Logging.LOGGING ) {
+                System.out.println("Moving closer to enemy EC\n");
+            }
+
             Pathfinding.moveNoYield(Pathfinding.findPath(enemyEC, robotController), robotController);
         } else if (!standingByEnemyEC() && !tryKill()) {
             List<MapLocation> chokeSpots = openSpotsByEnemyEC();
             if (chokeSpots.isEmpty()) {
-                System.out.println("No choke spots, hunting\n");
+                if ( Logging.LOGGING ) {
+                    System.out.println("No choke spots, hunting\n");
+                }
+
                 tryKill();
                 mode = MuckMode.HUNT;
             } else {
-                System.out.println("Found choke spot, moving to choke\n");
+                if ( Logging.LOGGING ) {
+                    System.out.println("Found choke spot, moving to choke\n");
+                }
+
                 Pathfinding.moveNoYield(Pathfinding.findPath(chokeSpots.get(0), robotController), robotController);
             }
         } else {
