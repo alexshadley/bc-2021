@@ -13,6 +13,7 @@ import java.util.ArrayList;
  * Sensor r^2: 30
  * Detect r^2: 40
  */
+@Deprecated
 public class Muckracker implements Robot {
     private final RobotController robotController;
 

@@ -47,10 +47,79 @@ public class MuckrackerV2 implements Robot{
 
         // Sneaky way to determine scout direction. If we are built on the same
         // round number, this should set us off in the same direction.
-        scoutDir = Directions.directions[robotController.getRoundNum() % 8];
+        scoutDir = getScoutDir();
 
         if (parent != null)
             this.coordinateSystem = new CoordinateSystem(parent.location);
+    }
+
+    private Direction getScoutDir() {
+        RobotInfo robotInfo;
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.NORTH));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.SOUTH;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.SOUTH));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.NORTH;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.EAST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.WEST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.WEST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.EAST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.NORTHWEST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.SOUTHEAST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.NORTHEAST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.SOUTHWEST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.SOUTHWEST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.NORTHEAST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        try {
+            robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.SOUTHEAST));
+            if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                return Direction.NORTHWEST;
+            }
+        } catch (GameActionException e) {
+            //noop
+        }
+        return Direction.SOUTH;
     }
 
 
