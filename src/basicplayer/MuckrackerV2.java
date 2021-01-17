@@ -61,9 +61,11 @@ public class MuckrackerV2 implements Robot{
         while(true) {
             switch (mode) {
                 case SCOUT:
+                    System.out.println("Case SCOUT\n");
                     scout();
                     break;
                 case SCAN:
+                    System.out.println("Case SCAN\n");
                     scan();
                     break;
                 //TODO
@@ -86,16 +88,23 @@ public class MuckrackerV2 implements Robot{
             mode = MuckMode.CHOKE;
         }
 
-        RobotInfo enemyLiar = getClosestSlanderer();
-        if (enemyLiar != null && Directions.distanceTo(enemyLiar.location, robotController.getLocation()) <= ACTION_R2) {
-            robotController.expose(enemyLiar.getLocation());
-        } else if (!robotController.onTheMap(new MapLocation(scoutDir.dx, scoutDir.dy))) {
+        if (tryKill()) {
+            return;
+        } else if (!robotController.onTheMap(robotController.getLocation().add(scoutDir))) {
             mode = MuckMode.SCAN;
         } else {
             Pathfinding.moveNoYield(scoutDir, robotController);
         }
     }
 
+    private boolean tryKill() throws GameActionException {
+        RobotInfo enemyLiar = getClosestSlanderer();
+        if (enemyLiar != null && Directions.distanceTo(enemyLiar.location, robotController.getLocation()) <= ACTION_R2) {
+            robotController.expose(enemyLiar.getLocation());
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Returns the robot info of the closest slanderer.
@@ -161,12 +170,20 @@ public class MuckrackerV2 implements Robot{
     private void scan() throws GameActionException {
         if (scanDir == null) {
             // MAGIC DIRECTION
-            scanDir = Direction.NORTH;
+            lastVerticalScanDir = scanDir = Direction.NORTH;
+        }
+
+        if (seesEnemyEC()) {
+            mode = MuckMode.CHOKE;
+        }
+        if (tryKill()) {
+            return;
         }
 
         switch (scanDir) {
             case NORTH:
-                if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+                System.out.println("case NORTH");
+                if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
                     Pathfinding.moveNoYield(scanDir, robotController);
@@ -177,7 +194,8 @@ public class MuckrackerV2 implements Robot{
                 }
                 break;
             case SOUTH:
-                if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+                System.out.println("case SOUTH");
+                if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
                     Pathfinding.moveNoYield(scanDir, robotController);
@@ -189,6 +207,7 @@ public class MuckrackerV2 implements Robot{
                 break;
             case EAST:
             case WEST:
+                System.out.println("case " + scanDir);
                 electricSlide();
                 break;
             default:
@@ -200,22 +219,37 @@ public class MuckrackerV2 implements Robot{
         if (scanDirCount >=10) {
             switch (lastVerticalScanDir) {
                 case NORTH:
-                    scanDir = Direction.SOUTH;
+                    System.out.println("last scan " + lastVerticalScanDir);
+                    lastVerticalScanDir = scanDir = Direction.SOUTH;
                     break;
                 case SOUTH:
                 default:
-                    scanDir = Direction.NORTH;
+                    System.out.println("last scan " + lastVerticalScanDir);
+                    lastVerticalScanDir = scanDir = Direction.NORTH;
                     break;
             }
             //We move so we don't miss an action before the yield in run.
             Pathfinding.moveNoYield(scanDir, robotController);
             scanDirCount = 0;
         // if we hit the edge of the map, we need to swap the translation direction
-        } else if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+        } else if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
             goEast = !goEast;
-            scanDirCount = 10;
+            switch (lastVerticalScanDir) {
+                case NORTH:
+                    System.out.println("last scan " + lastVerticalScanDir);
+                    lastVerticalScanDir = scanDir = Direction.SOUTH;
+                    break;
+                case SOUTH:
+                default:
+                    System.out.println("last scan " + lastVerticalScanDir);
+                    lastVerticalScanDir = scanDir = Direction.NORTH;
+                    break;
+            }
+            Pathfinding.moveNoYield(scanDir, robotController);
+            scanDirCount = 0;
         } else {
             Pathfinding.moveNoYield(scanDir, robotController);
+            System.out.println("Move count " + scanDirCount);
             scanDirCount += 1;
         }
     }

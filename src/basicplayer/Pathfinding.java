@@ -154,12 +154,18 @@ public class Pathfinding {
      */
     public static boolean moveNoYield(Direction direction, RobotController robotController) throws GameActionException {
         if (robotController.canMove(direction)) {
+            System.out.println("Normal move to " + direction);
             robotController.move(direction);
             return true;
         } else {
-            direction = findPath(new MapLocation(direction.dx, direction.dy), robotController);
-            robotController.move(direction);
-            return !(direction == Direction.CENTER);
+            direction = findPath(robotController.getLocation().add(direction), robotController);
+            System.out.println("Path found to " + direction);
+            if (direction == Direction.CENTER) {
+                return false;
+            } else {
+                robotController.move(direction);
+                return  true;
+            }
         }
     }
 

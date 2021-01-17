@@ -115,6 +115,10 @@ public class EnlightenmentCenter implements Robot {
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.POLITICIAN, Politician.GUARD_POLITICAN_SIZE),
         new TypeAndInfluence(RobotType.SLANDERER, 40),
         new TypeAndInfluence(RobotType.SLANDERER, 40)
