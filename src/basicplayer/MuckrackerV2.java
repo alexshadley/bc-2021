@@ -94,7 +94,7 @@ public class MuckrackerV2 implements Robot{
 
         if (tryKill()) {
             return;
-        } else if (!robotController.onTheMap(robotController.getLocation().add(scoutDir))) {
+        } else if (!robotController.onTheMap(robotController.getLocation().translate(scoutDir.dx*3, scoutDir.dy*3))) {
             mode = MuckMode.SCAN;
         } else {
             Pathfinding.moveNoYield(scoutDir, robotController);
@@ -200,7 +200,7 @@ public class MuckrackerV2 implements Robot{
         switch (scanDir) {
             case NORTH:
                 System.out.println("case NORTH");
-                if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
+                if (!robotController.onTheMap(robotController.getLocation().translate(0, 3))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
                     Pathfinding.moveNoYield(scanDir, robotController);
@@ -212,7 +212,7 @@ public class MuckrackerV2 implements Robot{
                 break;
             case SOUTH:
                 System.out.println("case SOUTH");
-                if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
+                if (!robotController.onTheMap(robotController.getLocation().translate(0, -3))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
                     Pathfinding.moveNoYield(scanDir, robotController);
@@ -233,7 +233,7 @@ public class MuckrackerV2 implements Robot{
     }
 
     private void electricSlide() throws GameActionException {
-        if (scanDirCount >=14) {
+        if (scanDirCount >=20) {
             switch (lastVerticalScanDir) {
                 case NORTH:
                     System.out.println("last scan " + lastVerticalScanDir);
@@ -249,7 +249,7 @@ public class MuckrackerV2 implements Robot{
             Pathfinding.moveNoYield(scanDir, robotController);
             scanDirCount = 0;
         // if we hit the edge of the map, we need to swap the translation direction
-        } else if (!robotController.onTheMap(robotController.getLocation().add(scanDir))) {
+        } else if (!robotController.onTheMap(robotController.getLocation().translate(scanDir.dx*3, scanDir.dy*3))) {
             goEast = !goEast;
             switch (lastVerticalScanDir) {
                 case NORTH:
