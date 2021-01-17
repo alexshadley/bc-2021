@@ -22,6 +22,7 @@ public class Pathfinding {
      */
     public static Direction findPath(MapLocation destination, RobotController robotController) {
         // TODO: Why do we need this?
+        // Dunno? It shouldn't be null
         if ( destination == null ) {
             return ( Direction.CENTER );
         }
@@ -118,6 +119,7 @@ public class Pathfinding {
      * @throws GameActionException Should never be thrown, as {Pathfinding.findPath} checks
      * if move is valid before committing
      */
+    @Deprecated //y did i make this
     public static void move(MapLocation destination, RobotController robotController) throws GameActionException {
         robotController.move(findPath(destination, robotController));
     }
@@ -129,6 +131,7 @@ public class Pathfinding {
      * @param robotController the robot we are trying to move
      * @throws GameActionException if we cant move? Idk
      */
+    @Deprecated //please use tryMove() or moveNoYield()
     public static void move(Direction direction, RobotController robotController) throws GameActionException {
         if (robotController.canMove(direction)) {
             robotController.move(direction);
@@ -139,6 +142,24 @@ public class Pathfinding {
             robotController.move(direction);
             //TODO Make sure removing this yield doesn't break anything
             Clock.yield();
+        }
+    }
+
+    /**
+     * Does a check to see if we can move, then moves.
+     * Performs a Clock.yield
+     * @param direction the direction we want to move
+     * @param robotController the robot we are trying to move
+     * @throws GameActionException if we cant move? Idk
+     */
+    public static boolean moveNoYield(Direction direction, RobotController robotController) throws GameActionException {
+        if (robotController.canMove(direction)) {
+            robotController.move(direction);
+            return true;
+        } else {
+            direction = findPath(new MapLocation(direction.dx, direction.dy), robotController);
+            robotController.move(direction);
+            return !(direction == Direction.CENTER);
         }
     }
 
