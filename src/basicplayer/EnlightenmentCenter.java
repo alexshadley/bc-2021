@@ -81,11 +81,10 @@ public class EnlightenmentCenter implements Robot {
 
     private static final List<TypeAndInfluenceFunction> scoutingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
-        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> 40),
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 40),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
-    private static final List<Integer> scoutingFrequencies = Arrays.asList(1, 0, 2, 5);
+    private static final List<Integer> scoutingFrequencies = Arrays.asList(1, 2, 5);
 
     private static final List<TypeAndInfluenceFunction> buildingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
@@ -93,7 +92,7 @@ public class EnlightenmentCenter implements Robot {
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
-    private static final List<Integer> buildingFrequencies = Arrays.asList(1, 1, 2, 1);
+    private static final List<Integer> buildingFrequencies = Arrays.asList(2, 1, 2, 5);
 
     private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
@@ -108,7 +107,7 @@ public class EnlightenmentCenter implements Robot {
         put(ECMode.RUSHING, new RobotTypeDecider(rushingOptions, rushingFrequencies));
     }};
 
-    private static final int MAGIC_RUSH_TURN = 800;
+    private static final int MAGIC_RUSH_TURN = 600;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 130),
