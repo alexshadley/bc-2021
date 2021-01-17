@@ -7,7 +7,8 @@ public class Flags {
     public enum Type {
         NONE, // default flag
         ENEMY_EC_FOUND, // used by scouts to indicate enemy ec found
-        ATTACK_ENEMY_EC // used by ecs to initiate a rush
+        ATTACK_ENEMY_EC, // used by ecs to initiate a rush
+        NEUTRAL_EC // used by mucks
     }
 
     private static int encodeFlag(final Type flag, final int data) {
@@ -44,6 +45,13 @@ public class Flags {
         return encodeFlag(
             Type.ENEMY_EC_FOUND,
             ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
+        );
+    }
+
+    public static int encodeNeturalECFoundFlag(final int x, final int y) {
+        return encodeFlag(
+                Type.NEUTRAL_EC,
+                ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
         );
     }
 

@@ -175,8 +175,8 @@ public class MuckrackerV2 implements Robot{
         if ( Logging.LOGGING ) {
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
-        //TODO this needs the better flag
-        robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
+
+        robotController.setFlag(Flags.encodeNeturalECFoundFlag(coords[0], coords[1]));
     }
 
     /**
