@@ -24,6 +24,10 @@ public class MuckrackerV2 implements Robot{
     private MapLocation enemyEC;
     private CoordinateSystem coordinateSystem;
 
+    private Direction scanDir = null;
+    private Direction lastVerticalScanDir = null;
+    private Boolean goEast = true;
+    private int scanDirCount = 0;
 
     private enum MuckMode {
         SCOUT,
@@ -41,6 +45,9 @@ public class MuckrackerV2 implements Robot{
         // Sneaky way to determine scout direction. If we are built on the same
         // round number, this should set us off in the same direction.
         scoutDir = Directions.directions[robotController.getRoundNum() % 8];
+
+        if (parent != null)
+            this.coordinateSystem = new CoordinateSystem(parent.location);
     }
 
 
@@ -53,12 +60,11 @@ public class MuckrackerV2 implements Robot{
     public void run() throws GameActionException {
         while(true) {
             switch (mode) {
-                // TODO
                 case SCOUT:
                     scout();
                     break;
-                //TODO
                 case SCAN:
+                    scan();
                     break;
                 //TODO
                 case CHOKE:
@@ -83,6 +89,8 @@ public class MuckrackerV2 implements Robot{
         RobotInfo enemyLiar = getClosestSlanderer();
         if (enemyLiar != null && Directions.distanceTo(enemyLiar.location, robotController.getLocation()) <= ACTION_R2) {
             robotController.expose(enemyLiar.getLocation());
+        } else if (!robotController.onTheMap(new MapLocation(scoutDir.dx, scoutDir.dy))) {
+            mode = MuckMode.SCAN;
         } else {
             Pathfinding.moveNoYield(scoutDir, robotController);
         }
@@ -145,6 +153,71 @@ public class MuckrackerV2 implements Robot{
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
+    }
+
+    /**
+     * Go North/South, then East, and then back west
+     */
+    private void scan() throws GameActionException {
+        if (scanDir == null) {
+            // MAGIC DIRECTION
+            scanDir = Direction.NORTH;
+        }
+
+        switch (scanDir) {
+            case NORTH:
+                if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+                    scanDir = goEast ? Direction.EAST : Direction.WEST;
+                    //We move here to not miss an action before yielding
+                    Pathfinding.moveNoYield(scanDir, robotController);
+                    scanDirCount += 1;
+                } else {
+                    Pathfinding.moveNoYield(scanDir, robotController);
+                    lastVerticalScanDir = Direction.NORTH;
+                }
+                break;
+            case SOUTH:
+                if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+                    scanDir = goEast ? Direction.EAST : Direction.WEST;
+                    //We move here to not miss an action before yielding
+                    Pathfinding.moveNoYield(scanDir, robotController);
+                    scanDirCount += 1;
+                } else {
+                    Pathfinding.moveNoYield(scanDir, robotController);
+                    lastVerticalScanDir = Direction.SOUTH;
+                }
+                break;
+            case EAST:
+            case WEST:
+                electricSlide();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void electricSlide() throws GameActionException {
+        if (scanDirCount >=10) {
+            switch (lastVerticalScanDir) {
+                case NORTH:
+                    scanDir = Direction.SOUTH;
+                    break;
+                case SOUTH:
+                default:
+                    scanDir = Direction.NORTH;
+                    break;
+            }
+            //We move so we don't miss an action before the yield in run.
+            Pathfinding.moveNoYield(scanDir, robotController);
+            scanDirCount = 0;
+        // if we hit the edge of the map, we need to swap the translation direction
+        } else if (!robotController.onTheMap(new MapLocation(scanDir.dx, scanDir.dy))) {
+            goEast = !goEast;
+            scanDirCount = 10;
+        } else {
+            Pathfinding.moveNoYield(scanDir, robotController);
+            scanDirCount += 1;
+        }
     }
 
 }
