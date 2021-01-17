@@ -2,6 +2,9 @@ package basicplayer;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The return of the Muckracker, but this time with some improvements including:
  * - All method names are quotes from my minds enigma
@@ -68,11 +71,12 @@ public class MuckrackerV2 implements Robot{
                     System.out.println("Case SCAN\n");
                     scan();
                     break;
-                //TODO
                 case CHOKE:
+                    choke();
                     break;
                 //TODO
                 case HUNT:
+                    hunt();
                     break;
                 //TODO (NE?)
                 default:
@@ -139,9 +143,19 @@ public class MuckrackerV2 implements Robot{
                     enemyEC = robot.location;
                     setEnemyHQFlag(enemyEC);
                     return true;
-                } else if (robot.getTeam() != robotController.getTeam()){
+                } else if (robot.getTeam() != robotController.getTeam()) {
                     setNeutralECFlag(robot.getLocation(), robot.getConviction());
                     return false;
+                }
+            } else if (robot.getTeam() == robotController.getTeam() && robot.getType() == RobotType.MUCKRAKER) {
+                // Can we see one of our Muckrackers that can see an EC?
+                // Proto muckernet
+                int flag = robotController.getFlag(robot.getID());
+                if (Flags.getFlagType(flag) == Flags.Type.ENEMY_EC_FOUND) {
+                    final int[] coords = Flags.getEnemyECFoundInfo(flag);
+                    enemyEC = coordinateSystem.toAbsolute(coords[0], coords[1]);
+                    setEnemyHQFlag(enemyEC);
+                    return true;
                 }
             }
         }
@@ -161,6 +175,7 @@ public class MuckrackerV2 implements Robot{
         if ( Logging.LOGGING ) {
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
+        //TODO this needs the better flag
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 
@@ -175,6 +190,8 @@ public class MuckrackerV2 implements Robot{
 
         if (seesEnemyEC()) {
             mode = MuckMode.CHOKE;
+            tryKill();
+            return;
         }
         if (tryKill()) {
             return;
@@ -216,7 +233,7 @@ public class MuckrackerV2 implements Robot{
     }
 
     private void electricSlide() throws GameActionException {
-        if (scanDirCount >=10) {
+        if (scanDirCount >=14) {
             switch (lastVerticalScanDir) {
                 case NORTH:
                     System.out.println("last scan " + lastVerticalScanDir);
@@ -254,4 +271,66 @@ public class MuckrackerV2 implements Robot{
         }
     }
 
+    private void choke() throws GameActionException {
+        //If we are too far away move closer
+        if (Directions.distanceTo(enemyEC, robotController.getLocation()) > 12) {
+            System.out.println("Moving closer to enemy EC\n");
+            Pathfinding.moveNoYield(Pathfinding.findPath(enemyEC, robotController), robotController);
+        } else if (!standingByEnemyEC() && !tryKill()) {
+            List<MapLocation> chokeSpots = openSpotsByEnemyEC();
+            if (chokeSpots.isEmpty()) {
+                System.out.println("No choke spots, hunting\n");
+                tryKill();
+                mode = MuckMode.HUNT;
+            } else {
+                System.out.println("Found choke spot, moving to choke\n");
+                Pathfinding.moveNoYield(Pathfinding.findPath(chokeSpots.get(0), robotController), robotController);
+            }
+        } else {
+            //We should be standing by an enemy EC, we should try to kill.
+            tryKill();
+        }
+    }
+
+    private boolean standingByEnemyEC() throws GameActionException {
+        if (robotController.canSenseLocation(enemyEC)) {
+            for (Direction direction : Directions.directions) {
+                MapLocation location = robotController.getLocation().add(direction);
+                if (robotController.onTheMap(location)) {
+                    RobotInfo ec = robotController.senseRobotAtLocation(location);
+                    if (ec != null && ec.getTeam() == enemyTeam && ec.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private List<MapLocation> openSpotsByEnemyEC() throws GameActionException {
+        List<MapLocation> openSpots = new ArrayList<>();
+
+        for (Direction direction : Directions.directions) {
+            if (robotController.onTheMap(enemyEC.add(direction))) {
+                RobotInfo robotInfo = robotController.senseRobotAtLocation(enemyEC.add(direction));
+                if (robotInfo != null && robotInfo.getTeam() != robotController.getTeam()) {
+                    openSpots.add(enemyEC.add(direction));
+                } else if (robotInfo == null) {
+                    openSpots.add(enemyEC.add(direction));
+                }
+            }
+        }
+
+        return openSpots;
+    }
+
+    /**
+     * really borky right now.
+     * @throws GameActionException
+     */
+    private void hunt() throws GameActionException {
+        if (!tryKill()) {
+            Pathfinding.moveNoYield(Directions.getRandomDirection(), robotController);
+        }
+    }
 }
