@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * The return of the Muckracker, but this time with some improvements including:
@@ -320,19 +321,10 @@ public class MuckrackerV2 implements Robot{
         // if we hit the edge of the map, we need to swap the translation direction
         } else if (!robotController.onTheMap(robotController.getLocation().translate(scanDir.dx*3, scanDir.dy*3))) {
             goEast = !goEast;
-            switch (lastVerticalScanDir) {
-                case NORTH:
-                    System.out.println("last scan " + lastVerticalScanDir);
-                    lastVerticalScanDir = scanDir = Direction.SOUTH;
-                    break;
-                case SOUTH:
-                default:
-                    System.out.println("last scan " + lastVerticalScanDir);
-                    lastVerticalScanDir = scanDir = Direction.NORTH;
-                    break;
-            }
+            scanDir = goEast ? Direction.EAST : Direction.WEST;
+            scanDirCount = -10;
+
             Pathfinding.moveNoYield(scanDir, robotController);
-            scanDirCount = 0;
         } else {
             Pathfinding.moveNoYield(scanDir, robotController);
             System.out.println("Move count " + scanDirCount);
