@@ -216,7 +216,7 @@ public class MuckrackerV2 implements Robot{
                     setNeutralECFlag(robot.getLocation(), robot.getConviction());
                     return false;
                 }
-            } else if (robot.getTeam() == robotController.getTeam() && robot.getType() == RobotType.MUCKRAKER) {
+            } else if (robot.getTeam() == robotController.getTeam() && (robot.getType() == RobotType.MUCKRAKER || robot.getType() == RobotType.ENLIGHTENMENT_CENTER)) {
                 // Can we see one of our Muckrackers that can see an EC?
                 // Proto muckernet
                 int flag = robotController.getFlag(robot.getID());
@@ -398,8 +398,57 @@ public class MuckrackerV2 implements Robot{
      * @throws GameActionException
      */
     private void hunt() throws GameActionException {
-        if (!tryKill()) {
-            Pathfinding.moveNoYield(Directions.getRandomDirection(), robotController);
+        MapLocation closestSland = closestSlandererToHunt();
+        if ( closestSland != null && Directions.distanceTo(closestSland, robotController.getLocation()) <= ACTION_R2) {
+            if (robotController.canExpose(closestSland)) {
+                robotController.expose(closestSland);
+            } else {
+                Pathfinding.moveNoYield(Directions.getRandomDirection(), robotController);
+                mode = MuckMode.CHOKE;
+            }
+        } else {
+            if (closestSland == null || robotController.getLocation().directionTo(closestSland) == Direction.CENTER) {
+                mode = MuckMode.CHOKE;
+                robotController.setFlag(0);
+            } else {
+                Pathfinding.moveNoYield(Pathfinding.findPath(closestSland, robotController), robotController);
+            }
         }
+    }
+
+    private MapLocation closestSlandererToHunt() throws GameActionException {
+        RobotInfo[] infos = robotController.senseNearbyRobots(SENSOR_R2);
+        RobotInfo closest = null;
+        MapLocation closestOutOfRange = null;
+
+        for (RobotInfo info : infos) {
+            // Check in vision
+            if (info.type == RobotType.SLANDERER && info.getTeam() == enemyTeam) {
+                if (closest == null) {
+                    closest = info;
+                    setEnemySlandFlag(closest.getLocation());
+                } else if (Directions.distanceTo(info.getLocation(), robotController.getLocation()) < Directions.distanceTo(closest.getLocation(), robotController.getLocation())) {
+                    closest = info;
+                    setEnemySlandFlag(closest.getLocation());
+                }
+            } else if (info.getType() == RobotType.MUCKRAKER && info.getTeam() == robotController.getTeam()) {
+                int flag = robotController.getFlag(info.getID());
+                if (Flags.getFlagType(flag) == Flags.Type.ENEMY_SLANDERER) {
+                    final int[] coords = Flags.getEnemySlandererFlag(flag);
+                    MapLocation enemySland = coordinateSystem.toAbsolute(coords[0], coords[1]);
+                    setEnemySlandFlag(enemySland);
+                    closestOutOfRange = enemySland;
+                }
+            }
+        }
+        return (closest != null ? closest.getLocation() : closestOutOfRange);
+    }
+
+    private void setEnemySlandFlag(MapLocation location) throws GameActionException {
+        final int[] coords = coordinateSystem.toRelative(location);
+        if ( Logging.LOGGING ) {
+            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
+        }
+        robotController.setFlag(Flags.encodeEnemySladererFoundFlag(coords[0], coords[1]));
     }
 }

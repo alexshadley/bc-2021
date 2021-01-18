@@ -8,7 +8,8 @@ public class Flags {
         NONE, // default flag
         ENEMY_EC_FOUND, // used by scouts to indicate enemy ec found
         ATTACK_ENEMY_EC, // used by ecs to initiate a rush
-        NEUTRAL_EC // used by mucks
+        NEUTRAL_EC, // used by mucks
+        ENEMY_SLANDERER
     }
 
     private static int encodeFlag(final Type flag, final int data) {
@@ -34,6 +35,12 @@ public class Flags {
         return new int[] {x, y};
     }
 
+    public static int[] getEnemySlandererFlag(final int flag) {
+        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
+        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
+        return new int[] {x, y};
+    }
+
     /**
      * Encodes two coordinates as an ENEMY_EC_FOUND Flag
      *
@@ -51,6 +58,13 @@ public class Flags {
     public static int encodeNeturalECFoundFlag(final int x, final int y) {
         return encodeFlag(
                 Type.NEUTRAL_EC,
+                ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
+        );
+    }
+
+    public static int encodeEnemySladererFoundFlag(final int x, final int y) {
+        return encodeFlag(
+                Type.ENEMY_SLANDERER,
                 ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
         );
     }

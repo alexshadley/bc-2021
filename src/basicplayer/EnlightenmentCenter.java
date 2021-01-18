@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+//TODO: Alex, is there a way to set a flag so the muckrackers know where to go?
+// Checkout line 219 in seesEnemyHQ
 public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
