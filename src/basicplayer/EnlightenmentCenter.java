@@ -109,7 +109,8 @@ public class EnlightenmentCenter implements Robot {
         put(ECMode.RUSHING, new RobotTypeDecider(rushingOptions, rushingFrequencies));
     }};
 
-    private static final int MAGIC_RUSH_TURN = 600;
+    private static final int MAGIC_RUSH_TURN = 500;
+    private static final int MAGIC_ONLY_VOTE_TURN = 500;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 130),
@@ -286,6 +287,10 @@ public class EnlightenmentCenter implements Robot {
     }
 
     private TypeAndInfluence getRobotToBuild(final int robotCount, final int ecInfluence) {
+        if (rc.getRoundNum() >= MAGIC_ONLY_VOTE_TURN) {
+            return new TypeAndInfluence(RobotType.SLANDERER, 85);
+        }
+
         if (robotCount < startupSequence.length) {
             return startupSequence[robotCount];
         } else {
