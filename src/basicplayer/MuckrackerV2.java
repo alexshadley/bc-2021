@@ -67,6 +67,7 @@ public class MuckrackerV2 implements Robot{
         try {
             robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.SOUTH));
             if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                goEast = false;
                 return Direction.NORTH;
             }
         } catch (GameActionException e) {
@@ -75,6 +76,7 @@ public class MuckrackerV2 implements Robot{
         try {
             robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.EAST));
             if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                goEast = false;
                 return Direction.WEST;
             }
         } catch (GameActionException e) {
@@ -99,6 +101,7 @@ public class MuckrackerV2 implements Robot{
         try {
             robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.NORTHEAST));
             if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                goEast = false;
                 return Direction.SOUTHWEST;
             }
         } catch (GameActionException e) {
@@ -115,6 +118,7 @@ public class MuckrackerV2 implements Robot{
         try {
             robotInfo = robotController.senseRobotAtLocation(robotController.getLocation().add(Direction.SOUTHEAST));
             if (robotInfo != null && robotInfo.getTeam() == robotController.getTeam() && robotInfo.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                goEast = false;
                 return Direction.NORTHWEST;
             }
         } catch (GameActionException e) {
@@ -396,11 +400,11 @@ public class MuckrackerV2 implements Robot{
                 robotController.expose(closestSland);
             } else {
                 Pathfinding.moveNoYield(Directions.getRandomDirection(), robotController);
-                mode = MuckMode.CHOKE;
+                mode = MuckMode.SCAN;
             }
         } else {
             if (closestSland == null || robotController.getLocation().directionTo(closestSland) == Direction.CENTER) {
-                mode = MuckMode.CHOKE;
+                mode = MuckMode.SCAN;
                 robotController.setFlag(0);
             } else {
                 Pathfinding.moveNoYield(Pathfinding.findPath(closestSland, robotController), robotController);
