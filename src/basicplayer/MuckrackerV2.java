@@ -37,7 +37,8 @@ public class MuckrackerV2 implements Robot{
         SCOUT,
         SCAN,
         CHOKE,
-        HUNT
+        HUNT,
+        CLEAREC
     }
 
     public MuckrackerV2(RobotController robotController, Team enemyTeam, RobotInfo parent) {
@@ -151,6 +152,9 @@ public class MuckrackerV2 implements Robot{
                 //TODO
                 case HUNT:
                     hunt();
+                    break;
+                case CLEAREC:
+                    clearEC();
                     break;
                 //TODO (NE?)
                 default:
@@ -346,7 +350,7 @@ public class MuckrackerV2 implements Robot{
             if (chokeSpots.isEmpty()) {
                 System.out.println("No choke spots, hunting\n");
                 tryKill();
-                mode = MuckMode.HUNT;
+                mode = MuckMode.CLEAREC;
             } else {
                 System.out.println("Found choke spot, moving to choke\n");
                 Pathfinding.moveNoYield(Pathfinding.findPath(chokeSpots.get(0), robotController), robotController);
@@ -404,7 +408,8 @@ public class MuckrackerV2 implements Robot{
             }
         } else {
             if (closestSland == null || robotController.getLocation().directionTo(closestSland) == Direction.CENTER) {
-                mode = MuckMode.SCAN;
+                //mode = MuckMode.SCAN;
+                Pathfinding.moveNoYield(Directions.getRandomDirection(), robotController);
                 robotController.setFlag(0);
             } else {
                 Pathfinding.moveNoYield(Pathfinding.findPath(closestSland, robotController), robotController);
@@ -446,5 +451,17 @@ public class MuckrackerV2 implements Robot{
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
         robotController.setFlag(Flags.encodeEnemySladererFoundFlag(coords[0], coords[1]));
+    }
+
+    //GET AWAY YOU BASTARDS
+    private void clearEC() throws GameActionException {
+        Direction clearDir = Directions.getRandomDirection();
+        for (int i = 0; i < 10; i++) {
+            Pathfinding.moveNoYield(clearDir, robotController);
+            for (int j  = 0; j < robotController.getCooldownTurns(); j++) {
+                Clock.yield();
+            }
+        }
+        mode = MuckMode.HUNT;
     }
 }
