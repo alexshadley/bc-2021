@@ -21,6 +21,10 @@ public class LinearBidder implements Bidder {
     public int getBid(final boolean wonLastBid) {
         final int bid = Math.min(getBidInternal(wonLastBid), maxBid);
         previousBid = bid;
+
+        if (Logging.ALWAYS_LOG) {
+            System.out.println("Bidding " + bid);
+        }
         return bid;
     }
 

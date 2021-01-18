@@ -1,12 +1,12 @@
 package basicplayer;
 
+import basicplayer.Flags.Type;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import basicplayer.Flags.Type;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,14 +90,14 @@ public class EnlightenmentCenter implements Robot {
 
     private static final List<TypeAndInfluenceFunction> buildingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
-        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Math.max(i / 4, 50)),
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
     private static final List<Integer> buildingFrequencies = Arrays.asList(2, 1, 2, 5);
 
     private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
-        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> i/4),
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Math.max(i / 4, 50)),
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
@@ -127,7 +127,13 @@ public class EnlightenmentCenter implements Robot {
     };
 
     private static final Bidder constantBidder = new ConstantBidder(1);
-    private static final Bidder adaptiveBidder = new LinearBidder(5, 5, 50);
+    private static final Bidder smallAdaptiveBidder = new LinearBidder(5, 5, 50);
+    private static final Bidder mediumAdaptiveBidder = new LinearBidder(20, 20, 200);
+    private static final Bidder largeAdaptiveBidder = new LinearBidder(50, 50, 1000);
+
+    private static final int SMALL_BIDDER_THRESHOLD = 200;
+    private static final int MED_BIDDER_THRESHOLD = 500;
+    private static final int LARGE_BIDDER_THRESHOLD = 1000;
 
     private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
@@ -165,12 +171,23 @@ public class EnlightenmentCenter implements Robot {
 
             buildRobot();
 
-            if (rc.getInfluence() >= 200) {
-                bidderRunner.attemptBid(rc, adaptiveBidder);
-            } else {
-                bidderRunner.attemptBid(rc, constantBidder);
-            }
+            bid();
+
             Clock.yield();
+        }
+    }
+
+    private void bid() {
+        final int influence = rc.getInfluence();
+
+        if (influence < SMALL_BIDDER_THRESHOLD) {
+            bidderRunner.attemptBid(rc, constantBidder);
+        } else if (influence < MED_BIDDER_THRESHOLD) {
+            bidderRunner.attemptBid(rc, smallAdaptiveBidder);
+        } else if (influence < LARGE_BIDDER_THRESHOLD) {
+            bidderRunner.attemptBid(rc, mediumAdaptiveBidder);
+        } else {
+            bidderRunner.attemptBid(rc, largeAdaptiveBidder);
         }
     }
 
@@ -178,7 +195,7 @@ public class EnlightenmentCenter implements Robot {
         final TypeAndInfluence next;
         if (nextToBuild == null) {
             next = getRobotToBuild(robotCount, rc.getInfluence());
-            if ( Logging.LOGGING ) {
+            if (Logging.LOGGING) {
                 System.out.println("Will build " + next.robotType + " at " + next.influence);
             }
         } else {
@@ -208,7 +225,7 @@ public class EnlightenmentCenter implements Robot {
 
     private void initiateRush() throws GameActionException {
         if (enemyECCount == 0) {
-            if ( Logging.LOGGING ) {
+            if (Logging.LOGGING) {
                 System.out.println("Failed to rush, no enemy ECs known");
             }
             return;
@@ -237,7 +254,7 @@ public class EnlightenmentCenter implements Robot {
 
             } catch (final GameActionException e) {
                 // TODO: should we really be catching an exception here?
-                if ( Logging.LOGGING ) {
+                if (Logging.LOGGING) {
                     System.out.println("Couldn't get scout flag, removing id: " + e);
                 }
                 deadScouts.add(id);
@@ -257,12 +274,12 @@ public class EnlightenmentCenter implements Robot {
             }
         }
 
-        if ( Logging.LOGGING ) {
+        if (Logging.LOGGING) {
             System.out.println("New enemy EC found: " + enemyECLocation);
         }
 
         // TODO: this is limited to 3 ECs
-        if ( enemyECCount < 3 ) {
+        if (enemyECCount < 3) {
             enemyECs[enemyECCount] = enemyECLocation;
             enemyECCount++;
         }
