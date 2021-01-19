@@ -367,7 +367,8 @@ public class EnlightenmentCenter implements Robot {
                 }
 
                 final int flag = rc.getFlag(id);
-                if (Flags.getFlagType(flag) == Type.EC_TAKEN) {
+                // TODO: fix this quick fix targetEC.isPresent()
+                if (Flags.getFlagType(flag) == Type.EC_TAKEN && targetEC.isPresent()) {
                     // target will exist in one but not both
                     enemyECs.remove(targetEC.get());
                     neutralECs.remove(targetEC.get());
