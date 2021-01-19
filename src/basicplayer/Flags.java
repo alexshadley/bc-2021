@@ -9,7 +9,9 @@ public class Flags {
         ENEMY_EC_FOUND, // used by scouts to indicate enemy ec found
         ATTACK_ENEMY_EC, // used by ecs to initiate a rush
         NEUTRAL_EC, // used by mucks
-        ENEMY_SLANDERER
+        ENEMY_SLANDERER,
+        EC_TAKEN, // used by attacking politicians to indicate that an EC has been taken
+        END_ATTACK // used by ECs to tell politicans to stop attacking
     }
 
     private static int encodeFlag(final Type flag, final int data) {
@@ -30,15 +32,11 @@ public class Flags {
     final static int COORD_BITMASK = 0x0000ff;
 
     public static int[] getEnemyECFoundInfo(final int flag) {
-        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
-        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
-        return new int[] {x, y};
+        return getCoordFlagData(flag);
     }
 
     public static int[] getEnemySlandererFlag(final int flag) {
-        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
-        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
-        return new int[] {x, y};
+        return getCoordFlagData(flag);
     }
 
     /**
@@ -62,6 +60,10 @@ public class Flags {
         );
     }
 
+    public static int[] getNeutralECFoundInfo(final int flag) {
+        return getCoordFlagData(flag);
+    }
+
     public static int encodeEnemySladererFoundFlag(final int x, final int y) {
         return encodeFlag(
                 Type.ENEMY_SLANDERER,
@@ -70,9 +72,7 @@ public class Flags {
     }
 
     public static int[] getAttackEnemyECInfo(final int flag) {
-        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
-        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
-        return new int[] {x, y};
+        return getCoordFlagData(flag);
     }
 
     /**
@@ -87,5 +87,15 @@ public class Flags {
             Type.ATTACK_ENEMY_EC,
             ((y & COORD_BITMASK) << COORD_WIDTH) | (COORD_BITMASK & x)
         );
+    }
+
+    private static int[] getCoordFlagData(final int flag) {
+        final int x = COORD_BITMASK & (flag >>> X_OFFSET);
+        final int y = COORD_BITMASK & (flag >>> Y_OFFSET);
+        return new int[] {x, y};
+    }
+
+    public static int encodeECTakenFlag() {
+        return encodeFlag(Type.EC_TAKEN, 0);
     }
 }

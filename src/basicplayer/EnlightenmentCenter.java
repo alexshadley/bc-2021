@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -94,7 +95,7 @@ public class EnlightenmentCenter implements Robot {
         new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
-    private static final List<Integer> buildingFrequencies = Arrays.asList(2, 1, 2, 5);
+    private static final List<Integer> buildingFrequencies = Arrays.asList(2, 1, 3, 5);
 
     private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Math.max(i / 4, 50)),
@@ -109,8 +110,16 @@ public class EnlightenmentCenter implements Robot {
         put(ECMode.RUSHING, new RobotTypeDecider(rushingOptions, rushingFrequencies));
     }};
 
-    private static final int MAGIC_RUSH_TURN = 500;
-    private static final int MAGIC_ONLY_VOTE_TURN = 500;
+    private static final List<TypeAndInfluenceFunction> onlyVoteOptions = Arrays.asList(
+        new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85));
+    private static final RobotTypeDecider onlyVoteTypeDecider = new RobotTypeDecider(
+        onlyVoteOptions,
+        Arrays.asList(2, 3)
+    );
+
+    private static final int MAGIC_RUSH_TURN = 600;
+    private static final int MAGIC_ONLY_VOTE_TURN = 1000;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 130),
@@ -146,9 +155,11 @@ public class EnlightenmentCenter implements Robot {
 
     // TODO (alex): replace this with something more bytecode efficient if necessary
     private final Set<Integer> scouts = new HashSet<>();
+    private final Set<Integer> attackPols = new HashSet<>();
 
-    private MapLocation[] enemyECs = new MapLocation[3];
-    private int enemyECCount = 0;
+    private Set<MapLocation> enemyECs = new HashSet<>();
+    private Set<MapLocation> neutralECs = new HashSet<>();
+    private Optional<MapLocation> targetEC = Optional.empty();
 
     // has a value if we want to make something but don't have influence yet. Otherwise null
     private TypeAndInfluence nextToBuild;
@@ -167,8 +178,18 @@ public class EnlightenmentCenter implements Robot {
 
             // start rush if we're past rush turn and not yet rushing
             if (rc.getRoundNum() >= MAGIC_RUSH_TURN && mode != ECMode.RUSHING) {
-                initiateRush();
+                mode = ECMode.RUSHING;
             }
+
+            if (!targetEC.isPresent()) {
+                if (mode == ECMode.BUILDING) {
+                    targetNeutral();
+                }
+                if (mode == ECMode.RUSHING) {
+                    targetEnemy();
+                }
+            }
+
 
             buildRobot();
 
@@ -211,6 +232,10 @@ public class EnlightenmentCenter implements Robot {
                 robotCount++;
                 if (next.robotType == RobotType.MUCKRAKER) {
                     scouts.add(robotId);
+                } else if (next.robotType == RobotType.POLITICIAN
+                    && next.influence != Politician.GUARD_POLITICAN_SIZE) {
+
+                    attackPols.add(robotId);
                 }
                 unitBuilt = true;
                 break;
@@ -224,20 +249,33 @@ public class EnlightenmentCenter implements Robot {
         }
     }
 
-    private void initiateRush() throws GameActionException {
-        if (enemyECCount == 0) {
-            if (Logging.LOGGING) {
-                System.out.println("Failed to rush, no enemy ECs known");
-            }
+    private void targetNeutral() throws GameActionException {
+        if (neutralECs.size() == 0) {
+            Logging.log("Failed to target, no neutral ECs known");
             return;
         }
 
-        final int[] attackCoords = coordinateSystem.toRelative(enemyECs[0]);
+        final MapLocation target = neutralECs.iterator().next();
+        targetEC = Optional.of(target);
+
+        final int[] attackCoords = coordinateSystem.toRelative(target);
         rc.setFlag(Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
-        mode = ECMode.RUSHING;
     }
 
-    private void checkCommunications() {
+    private void targetEnemy() throws GameActionException {
+        if (enemyECs.size() == 0) {
+            Logging.log("Failed to rush, no enemy ECs known");
+            return;
+        }
+
+        final MapLocation target = enemyECs.iterator().next();
+        targetEC = Optional.of(target);
+
+        final int[] attackCoords = coordinateSystem.toRelative(target);
+        rc.setFlag(Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
+    }
+
+    private void checkCommunications() throws GameActionException {
         final Set<Integer> deadScouts = new HashSet<>();
         for (final int id : scouts) {
             try {
@@ -245,7 +283,15 @@ public class EnlightenmentCenter implements Robot {
 
                 if (Flags.getFlagType(flag) == Type.ENEMY_EC_FOUND) {
                     final int[] coords = Flags.getEnemyECFoundInfo(flag);
-                    addEnemyEC(coordinateSystem.toAbsolute(coords[0], coords[1]));
+                    enemyECs.add(coordinateSystem.toAbsolute(coords[0], coords[1]));
+
+                    // start building up forces
+                    if (mode == ECMode.SCOUTING) {
+                        mode = ECMode.BUILDING;
+                    }
+                } else if (Flags.getFlagType(flag) == Type.NEUTRAL_EC) {
+                    final int[] coords = Flags.getNeutralECFoundInfo(flag);
+                    neutralECs.add(coordinateSystem.toAbsolute(coords[0], coords[1]));
 
                     // start building up forces
                     if (mode == ECMode.SCOUTING) {
@@ -261,34 +307,34 @@ public class EnlightenmentCenter implements Robot {
                 deadScouts.add(id);
             }
         }
-
         scouts.removeAll(deadScouts);
-    }
 
-    /**
-     * Add enemy ec, deduping if this has already been found
-     */
-    private void addEnemyEC(final MapLocation enemyECLocation) {
-        for (int i = 0; i < enemyECCount; i++) {
-            if (enemyECLocation.equals(enemyECs[i])) {
-                return;
+        // if we have a target EC, check to see if we've won it; if so, remove it from list of enemy or neutral
+        if (targetEC.isPresent()) {
+            final Set<Integer> deadPols = new HashSet<>();
+            for (final int id : attackPols) {
+                if (!rc.canGetFlag(id)) {
+                    deadPols.add(id);
+                    continue;
+                }
+
+                final int flag = rc.getFlag(id);
+                if (Flags.getFlagType(flag) == Type.EC_TAKEN) {
+                    // target will exist in one but not both
+                    enemyECs.remove(targetEC.get());
+                    neutralECs.remove(targetEC.get());
+                    Logging.log("Enemy EC eliminated: " + targetEC.get().toString());
+                    targetEC = Optional.empty();
+                }
             }
-        }
 
-        if (Logging.LOGGING) {
-            System.out.println("New enemy EC found: " + enemyECLocation);
-        }
-
-        // TODO: this is limited to 3 ECs
-        if (enemyECCount < 3) {
-            enemyECs[enemyECCount] = enemyECLocation;
-            enemyECCount++;
+            attackPols.removeAll(deadPols);
         }
     }
 
     private TypeAndInfluence getRobotToBuild(final int robotCount, final int ecInfluence) {
         if (rc.getRoundNum() >= MAGIC_ONLY_VOTE_TURN) {
-            return new TypeAndInfluence(RobotType.SLANDERER, 85);
+            return onlyVoteTypeDecider.next(ecInfluence);
         }
 
         if (robotCount < startupSequence.length) {

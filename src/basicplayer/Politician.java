@@ -13,9 +13,9 @@ import java.util.Arrays;
 public class Politician implements Robot {
     public static final int GUARD_POLITICAN_SIZE = 30;
 
-    private static final int ACTION_R2 = 9;
-    private static final int SENSOR_R2 = 25;
-    private static final int DETECT_R2 = 25;
+    private static final int ACTION_R2 = RobotType.POLITICIAN.actionRadiusSquared;
+    private static final int SENSOR_R2 = RobotType.POLITICIAN.sensorRadiusSquared;
+    private static final int DETECT_R2 = RobotType.POLITICIAN.detectionRadiusSquared;
 
     private enum PoliticanMode {
         ROAMING,
@@ -78,6 +78,14 @@ public class Politician implements Robot {
                     planner.move(Directions.getRandomDirection());
                 } else {
                     rushAttack();
+
+                    // stop attacking (and tell our EC we won) if we find a friendly EC at the expected coords
+                    if (checkIfECWon()) {
+                        Logging.log("EC won!");
+                        rc.setFlag(Flags.encodeECTakenFlag());
+                        mode = PoliticanMode.ROAMING;
+                    }
+
                     planner.move(planner.getNextDirection(rushCoords));
                 }
             } else {
@@ -86,6 +94,13 @@ public class Politician implements Robot {
 
             Clock.yield();
         }
+    }
+
+    private boolean checkIfECWon() {
+        final RobotInfo[] friendly = rc.senseNearbyRobots(SENSOR_R2, enemy.opponent());
+
+        return Arrays.stream(friendly).anyMatch(robotInfo ->
+            robotInfo.type == RobotType.ENLIGHTENMENT_CENTER && robotInfo.location.equals(rushCoords));
     }
 
     private void guard() throws GameActionException {
@@ -185,6 +200,10 @@ public class Politician implements Robot {
                     this.mode = PoliticanMode.RUSHING;
 
                     final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
+                    if (Logging.LOGGING) {
+                        System.out.println("X: " + coords[0]);
+                        System.out.println("Y: " + coords[1]);
+                    }
                     this.rushCoords = coordinateSystem.toAbsolute(coords[0], coords[1]);
                 }
             }
@@ -210,6 +229,13 @@ public class Politician implements Robot {
      */
     private void rushAttack() throws GameActionException {
         final int actionRadius = rc.getType().actionRadiusSquared;
+
+        // the only neutral units are ECs, so explode if we find one
+        final RobotInfo[] neutral = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
+        if (neutral.length > 0) {
+            attemptAttack(actionRadius);
+            return;
+        }
 
         final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         for (final RobotInfo target : attackable) {

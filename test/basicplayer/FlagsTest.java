@@ -11,5 +11,11 @@ public class FlagsTest {
             new int[] {1, 2},
             Flags.getEnemyECFoundInfo(flag)
         );
+
+        final int flag2 = Flags.encodeEnemyECFoundFlag(2, 1);
+        assertArrayEquals(
+            new int[] {2, 1},
+            Flags.getEnemyECFoundInfo(flag2)
+        );
     }
 }
