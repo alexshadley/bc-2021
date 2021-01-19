@@ -188,7 +188,7 @@ public class MuckrackerV2 implements Robot {
 
     private boolean tryKill() throws GameActionException {
         RobotInfo enemyLiar = getClosestSlanderer();
-        if (enemyLiar != null && Directions.distanceTo(enemyLiar.location, robotController.getLocation()) <= ACTION_R2) {
+        if ( enemyLiar != null && robotController.canExpose( enemyLiar.getID() ) ) {
             robotController.expose(enemyLiar.getLocation());
             return true;
         }
