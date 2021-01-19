@@ -225,7 +225,7 @@ public class MuckrackerV2 implements Robot{
                     setNeutralECFlag(robot.getLocation(), robot.getConviction());
                     return false;
                 }
-            } else if (robot.getTeam() == robotController.getTeam() && (robot.getType() == RobotType.MUCKRAKER || robot.getType() == RobotType.ENLIGHTENMENT_CENTER)) {
+            } else if (robot.getTeam() == robotController.getTeam() && (robot.getType() == RobotType.MUCKRAKER)) {
                 // Can we see one of our Muckrackers that can see an EC?
                 // Proto muckernet
                 int flag = robotController.getFlag(robot.getID());
