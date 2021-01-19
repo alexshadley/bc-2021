@@ -137,7 +137,7 @@ public class EnlightenmentCenter implements Robot {
 
     private void initiateRush() throws GameActionException {
         if (enemyECCount == 0) {
-            if (Logging.LOGGING) {
+            if (Logging.ENABLED) {
                 System.out.println("Failed to rush, no enemy ECs known");
             }
 
@@ -167,7 +167,7 @@ public class EnlightenmentCenter implements Robot {
 
             } catch (final GameActionException e) {
                 // TODO: Should we really be trying to catch this as an exception?
-                if (Logging.LOGGING) {
+                if (Logging.ENABLED) {
                     System.out.println("Couldn't get scout flag, removing id: " + e);
                 }
 
@@ -188,7 +188,7 @@ public class EnlightenmentCenter implements Robot {
             }
         }
 
-        if (Logging.LOGGING) {
+        if (Logging.ENABLED) {
             System.out.println("New enemy EC found: " + enemyECLocation);
         }
 

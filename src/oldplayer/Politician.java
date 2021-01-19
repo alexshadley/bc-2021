@@ -69,7 +69,7 @@ public class Politician implements Robot {
             if ( rc.canGetFlag( parent.ID ) ) {
                 final int parentFlag = rc.getFlag(parent.ID);
                 if (Flags.getFlagType(parentFlag) == Type.ATTACK_ENEMY_EC) {
-                    if ( Logging.LOGGING ) {
+                    if ( Logging.ENABLED ) {
                         System.out.println("Recieved attack orders from EC");
                     }
                     this.mode = PoliticanMode.RUSHING;
@@ -104,7 +104,7 @@ public class Politician implements Robot {
         final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         for (final RobotInfo target : attackable) {
             if (target.type == RobotType.ENLIGHTENMENT_CENTER) {
-                if ( Logging.LOGGING ) {
+                if ( Logging.ENABLED ) {
                     System.out.println("Enemy EC found, attacking");
                 }
                 attemptAttack(actionRadius);
@@ -113,7 +113,7 @@ public class Politician implements Robot {
         }
 
         if (attackable.length >= 5) {
-            if ( Logging.LOGGING ) {
+            if ( Logging.ENABLED ) {
                 System.out.println("Overwhelmed, attacking");
             }
             attemptAttack(actionRadius);

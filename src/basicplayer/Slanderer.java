@@ -46,9 +46,7 @@ public class Slanderer implements Robot {
         while ( true ) {
             // if we've become a politician, switch to that code
             if (robotController.getType() == RobotType.POLITICIAN) {
-                if ( Logging.LOGGING ) {
-                    System.out.println("I've become a politican, transitioning");
-                }
+                Logging.info( "I've become a politican, transitioning" );
                 final Politician politician = new Politician(robotController, parent);
                 politician.run();
                 return;
@@ -62,8 +60,7 @@ public class Slanderer implements Robot {
                 // Yield
                 Clock.yield();
             } catch ( Exception e ) {
-                System.out.println( robotController.getType() + " Exception: " + e.getMessage() );
-                e.printStackTrace();
+                Logging.error( robotController.getType() + " Exception: " + e.getMessage() );
             }
         }
     }

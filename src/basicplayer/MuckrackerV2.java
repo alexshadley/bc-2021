@@ -146,11 +146,11 @@ public class MuckrackerV2 implements Robot {
         while (true) {
             switch (mode) {
                 case SCOUT:
-                    System.out.println("Case SCOUT\n");
+                    Logging.info( "Case SCOUT\n" );
                     scout();
                     break;
                 case SCAN:
-                    System.out.println("Case SCAN\n");
+                    Logging.info( "Case SCAN\n" );
                     scan();
                     break;
                 case CHOKE:
@@ -250,13 +250,8 @@ public class MuckrackerV2 implements Robot {
         if (robotController.canGetFlag(parent.ID)) {
             final int parentFlag = robotController.getFlag(parent.ID);
             if (Flags.getFlagType(parentFlag) == Type.ENEMY_EC_FOUND) {
-                Logging.log("Discovered enemy EC location from home base");
-
                 final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
-                if (Logging.LOGGING) {
-                    System.out.println("X: " + coords[0]);
-                    System.out.println("Y: " + coords[1]);
-                }
+                Logging.info( String.format( "Discovered enemy EC location from home base at relative coords: X %s, Y %s", coords[0], coords[1] ) );
                 return Optional.of(coordinateSystem.toAbsolute(coords[0], coords[1]));
             }
         }
@@ -267,18 +262,13 @@ public class MuckrackerV2 implements Robot {
 
     private void setEnemyHQFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if (Logging.LOGGING) {
-            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
-        }
+        Logging.info( String.format( "Found enemy HQ at relative coords: %s, %s", coords[0], coords[1] ) );
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 
     private void setNeutralECFlag(MapLocation location, int conviction) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if (Logging.LOGGING) {
-            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
-        }
-
+        Logging.info( String.format( "Found neutral HQ at relative coords: %s, %s", coords[0], coords[1] ) );
         robotController.setFlag(Flags.encodeNeturalECFoundFlag(coords[0], coords[1]));
     }
 
@@ -302,7 +292,7 @@ public class MuckrackerV2 implements Robot {
 
         switch (scanDir) {
             case NORTH:
-                System.out.println("case NORTH");
+                Logging.info( "case NORTH" );
                 if (!robotController.onTheMap(robotController.getLocation().translate(0, 3))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
@@ -314,7 +304,7 @@ public class MuckrackerV2 implements Robot {
                 }
                 break;
             case SOUTH:
-                System.out.println("case SOUTH");
+                Logging.info( "case SOUTH" );
                 if (!robotController.onTheMap(robotController.getLocation().translate(0, -3))) {
                     scanDir = goEast ? Direction.EAST : Direction.WEST;
                     //We move here to not miss an action before yielding
@@ -327,7 +317,7 @@ public class MuckrackerV2 implements Robot {
                 break;
             case EAST:
             case WEST:
-                System.out.println("case " + scanDir);
+                Logging.info( "case " + scanDir );
                 electricSlide();
                 break;
             default:
@@ -339,12 +329,12 @@ public class MuckrackerV2 implements Robot {
         if (scanDirCount >= 20) {
             switch (lastVerticalScanDir) {
                 case NORTH:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    Logging.info( "last scan " + lastVerticalScanDir );
                     lastVerticalScanDir = scanDir = Direction.SOUTH;
                     break;
                 case SOUTH:
                 default:
-                    System.out.println("last scan " + lastVerticalScanDir);
+                    Logging.info( "last scan " + lastVerticalScanDir );
                     lastVerticalScanDir = scanDir = Direction.NORTH;
                     break;
             }
@@ -360,7 +350,7 @@ public class MuckrackerV2 implements Robot {
             Pathfinding.moveNoYield(scanDir, robotController);
         } else {
             Pathfinding.moveNoYield(scanDir, robotController);
-            System.out.println("Move count " + scanDirCount);
+            Logging.info( "Move count " + scanDirCount );
             scanDirCount += 1;
         }
     }
@@ -368,16 +358,16 @@ public class MuckrackerV2 implements Robot {
     private void choke() throws GameActionException {
         //If we are too far away move closer
         if (Directions.distanceTo(enemyEC, robotController.getLocation()) > 12) {
-            System.out.println("Moving closer to enemy EC\n");
+            Logging.info( "Moving closer to enemy EC\n" );
             Pathfinding.moveNoYield(Pathfinding.findPath(enemyEC, robotController), robotController);
         } else if (!standingByEnemyEC() && !tryKill()) {
             List<MapLocation> chokeSpots = openSpotsByEnemyEC();
             if (chokeSpots.isEmpty()) {
-                System.out.println("No choke spots, hunting\n");
+                Logging.info( "No choke spots, hunting\n" );
                 tryKill();
                 mode = MuckMode.CLEAREC;
             } else {
-                System.out.println("Found choke spot, moving to choke\n");
+                Logging.info( "Found choke spot, moving to choke\n" );
                 Pathfinding.moveNoYield(Pathfinding.findPath(chokeSpots.get(0), robotController), robotController);
             }
         } else {
@@ -472,9 +462,7 @@ public class MuckrackerV2 implements Robot {
 
     private void setEnemySlandFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if (Logging.LOGGING) {
-            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
-        }
+        Logging.info( String.format( "Found enemy HQ at relative coords: %s, %s", coords[0], coords[1] ) );
         robotController.setFlag(Flags.encodeEnemySladererFoundFlag(coords[0], coords[1]));
     }
 

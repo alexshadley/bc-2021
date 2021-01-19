@@ -46,7 +46,7 @@ public class Slanderer implements Robot {
         while ( true ) {
             // if we've become a politician, switch to that code
             if (robotController.getType() == RobotType.POLITICIAN) {
-                if ( Logging.LOGGING ) {
+                if ( Logging.ENABLED ) {
                     System.out.println("I've become a politican, transitioning");
                 }
                 final Politician politician = new Politician(robotController, parent);

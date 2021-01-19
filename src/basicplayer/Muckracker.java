@@ -74,9 +74,7 @@ public class Muckracker implements Robot {
                         }
                         break;
                     case CHOKER:
-                        if ( Logging.LOGGING ) {
-                            System.out.println("We are attempting to choke");
-                        }
+                        Logging.debug( "We are attempting to choke" );
 
                         if (chokeSpot == null) {
                             ArrayList<MapLocation> openSpots = chokeSpots();
@@ -167,9 +165,7 @@ public class Muckracker implements Robot {
 
     private void setEnemyHQFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if ( Logging.LOGGING ) {
-            System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
-        }
+        Logging.info( String.format( "Found enemy HQ at relative coords: %s, %s", coords[0], coords[1] ) );
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
     }
 

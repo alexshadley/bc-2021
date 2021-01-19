@@ -263,9 +263,7 @@ public class EnlightenmentCenter implements Robot {
         final TypeAndInfluence next;
         if (nextToBuild == null) {
             next = getRobotToBuild(robotCount, rc.getInfluence());
-            if (Logging.LOGGING) {
-                System.out.println("Will build " + next.robotType + " at " + next.influence);
-            }
+            Logging.info( "Will build " + next.robotType + " at " + next.influence );
         } else {
             next = nextToBuild;
         }
@@ -297,7 +295,7 @@ public class EnlightenmentCenter implements Robot {
 
     private void targetNeutral() throws GameActionException {
         if (neutralECs.size() == 0) {
-            Logging.log("Failed to target, no neutral ECs known");
+            Logging.debug( "Failed to target, no neutral ECs known" );
             return;
         }
 
@@ -311,7 +309,7 @@ public class EnlightenmentCenter implements Robot {
 
     private void targetEnemy() throws GameActionException {
         if (enemyECs.size() == 0) {
-            Logging.log("Failed to rush, no enemy ECs known");
+            Logging.debug( "Failed to rush, no enemy ECs known" );
             return;
         }
 
@@ -353,9 +351,7 @@ public class EnlightenmentCenter implements Robot {
 
             } catch (final GameActionException e) {
                 // TODO: should we really be catching an exception here?
-                if (Logging.LOGGING) {
-                    System.out.println("Couldn't get scout flag, removing id: " + e);
-                }
+                Logging.error( "Couldn't get scout flag, removing id: " + e );
                 deadScouts.add(id);
             }
         }
@@ -375,7 +371,7 @@ public class EnlightenmentCenter implements Robot {
                     // target will exist in one but not both
                     enemyECs.remove(targetEC.get());
                     neutralECs.remove(targetEC.get());
-                    Logging.log("Enemy EC eliminated: " + targetEC.get().toString());
+                    Logging.debug( "Enemy EC eliminated: " + targetEC.get().toString() );
                     targetEC = Optional.empty();
                 }
             }

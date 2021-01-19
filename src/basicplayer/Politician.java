@@ -81,7 +81,7 @@ public class Politician implements Robot {
 
                     // stop attacking (and tell our EC we won) if we find a friendly EC at the expected coords
                     if (checkIfECWon()) {
-                        Logging.log("EC won!");
+                        Logging.info( "EC won!" );
                         rc.setFlag(Flags.encodeECTakenFlag());
                         mode = PoliticanMode.ROAMING;
                     }
@@ -115,16 +115,12 @@ public class Politician implements Robot {
             // see if there's a muckraker in sensors range at all
             final RobotInfo anyMuck = anyMuckraker();
             if (anyMuck != null) {
-                if (Logging.LOGGING) {
-                    System.out.println("Found muckraker out of empower range, moving in");
-                }
+                Logging.info( "Found muckraker out of empower range, moving in" );
                 planner.move(planner.getNextDirection(anyMuck.location));
                 return;
             }
 
-            if (Logging.LOGGING) {
-                System.out.println("No nearby muckraker");
-            }
+            Logging.info( "No nearby muckraker" );
             planner.move(Directions.getRandomDirection());
             return;
         }
@@ -134,9 +130,7 @@ public class Politician implements Robot {
         // see if we can attack the muckraker effectively
         final int blastRadiusAllies = rc.senseNearbyRobots(furthestMuckDistSquared, enemy.opponent()).length;
         if (blastRadiusAllies <= 3 && timeWaited >= TIME_TO_WAIT) {
-            if (Logging.LOGGING) {
-                System.out.println("Able to attack enemy muckraker");
-            }
+            Logging.info( "Able to attack enemy muckraker" );
             rc.empower(furthestMuckDistSquared);
             return;
         } else {
@@ -144,9 +138,7 @@ public class Politician implements Robot {
         }
 
         // if we couldn't attack muckraker, get closer
-        if (Logging.LOGGING) {
-            System.out.println("Moving in on enemy muckraker");
-        }
+        Logging.info( "Moving in on enemy muckraker" );
         planner.move(planner.getNextDirection(furthestMuck.location));
     }
 
@@ -194,16 +186,11 @@ public class Politician implements Robot {
             if (rc.canGetFlag(parent.ID)) {
                 final int parentFlag = rc.getFlag(parent.ID);
                 if (Flags.getFlagType(parentFlag) == Type.ATTACK_ENEMY_EC) {
-                    if (Logging.LOGGING) {
-                        System.out.println("Recieved attack orders from EC");
-                    }
+                    Logging.info( "Recieved attack orders from EC" );
                     this.mode = PoliticanMode.RUSHING;
 
                     final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
-                    if (Logging.LOGGING) {
-                        System.out.println("X: " + coords[0]);
-                        System.out.println("Y: " + coords[1]);
-                    }
+                    Logging.info( String.format( "Enemy HQ at coords: X %s, Y %s", coords[0], coords[1] ) );
                     this.rushCoords = coordinateSystem.toAbsolute(coords[0], coords[1]);
                 }
             }
@@ -240,18 +227,14 @@ public class Politician implements Robot {
         final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         for (final RobotInfo target : attackable) {
             if (target.type == RobotType.ENLIGHTENMENT_CENTER) {
-                if (Logging.LOGGING) {
-                    System.out.println("Enemy EC found, attacking");
-                }
+                Logging.info( "Enemy EC found, attacking" );
                 attemptAttack(actionRadius);
                 return;
             }
         }
 
         if (attackable.length >= 5) {
-            if (Logging.LOGGING) {
-                System.out.println("Overwhelmed, attacking");
-            }
+            Logging.info( "Overwhelmed, attacking" );
             attemptAttack(actionRadius);
         }
     }
