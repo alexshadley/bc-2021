@@ -25,7 +25,6 @@ public class Slanderer implements Robot {
     private Planner planner;
 
     private Direction runningDirection;
-    private Direction initialDirection;
 
     private final int HIT_LIMIT = 50;
     private int hitCount;
@@ -41,7 +40,6 @@ public class Slanderer implements Robot {
 
         planner = new Planner( robotController );
         runningDirection = parent.getLocation().directionTo( robotController.getLocation() );
-        initialDirection = runningDirection;
         hitCount = 0;
     }
 
@@ -127,11 +125,6 @@ public class Slanderer implements Robot {
         double minCost = 1.0 / 0.1;
 
         for ( Direction dir : Directions.directions ) {
-            // TODO: make better way to not choke own ECs (if next to EC run away or something)
-            if ( dir == initialDirection.opposite() ) {
-                continue;
-            }
-
             MapLocation adjLoc = robotController.adjacentLocation( dir );
             if ( robotController.onTheMap( adjLoc ) ) {
                 double cost = 1.0 / robotController.sensePassability( adjLoc );
