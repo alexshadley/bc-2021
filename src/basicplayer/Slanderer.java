@@ -110,7 +110,7 @@ public class Slanderer implements Robot {
             hitCount = 0;
         }
         
-        planner.move( runningDirection );
+        planner.move( planner.getNextDirection( runningDirection ) );
     }
 
     /**
