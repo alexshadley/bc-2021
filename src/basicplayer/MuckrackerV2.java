@@ -1,10 +1,17 @@
 package basicplayer;
 
-import battlecode.common.*;
-
+import basicplayer.Flags.Type;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.WeakHashMap;
+import java.util.Optional;
 
 /**
  * The return of the Muckracker, but this time with some improvements including:
@@ -14,7 +21,7 @@ import java.util.WeakHashMap;
  * - Integrated Van-Helsing instincts when hunting slanderers // TODO
  * - Training from the nations top bloodhounds to find baddies // TODO
  */
-public class MuckrackerV2 implements Robot{
+public class MuckrackerV2 implements Robot {
 
     private static final int ACTION_R2 = 12;
     private static final int SENSOR_R2 = 40;
@@ -51,8 +58,9 @@ public class MuckrackerV2 implements Robot{
         // round number, this should set us off in the same direction.
         scoutDir = getScoutDir();
 
-        if (parent != null)
+        if (parent != null) {
             this.coordinateSystem = new CoordinateSystem(parent.location);
+        }
     }
 
     private Direction getScoutDir() {
@@ -128,7 +136,6 @@ public class MuckrackerV2 implements Robot{
         return Direction.SOUTH;
     }
 
-
     /**
      * Main execution loop. All methods should be designed to only
      * do one action, as this will Clock.yield()
@@ -136,7 +143,7 @@ public class MuckrackerV2 implements Robot{
      */
     @Override
     public void run() throws GameActionException {
-        while(true) {
+        while (true) {
             switch (mode) {
                 case SCOUT:
                     System.out.println("Case SCOUT\n");
@@ -172,7 +179,7 @@ public class MuckrackerV2 implements Robot{
 
         if (tryKill()) {
             return;
-        } else if (!robotController.onTheMap(robotController.getLocation().translate(scoutDir.dx*3, scoutDir.dy*3))) {
+        } else if (!robotController.onTheMap(robotController.getLocation().translate(scoutDir.dx * 3, scoutDir.dy * 3))) {
             mode = MuckMode.SCAN;
         } else {
             Pathfinding.moveNoYield(scoutDir, robotController);
@@ -225,24 +232,42 @@ public class MuckrackerV2 implements Robot{
                     setNeutralECFlag(robot.getLocation(), robot.getConviction());
                     return false;
                 }
-            } else if (robot.getTeam() == robotController.getTeam() && (robot.getType() == RobotType.MUCKRAKER)) {
-                // Can we see one of our Muckrackers that can see an EC?
-                // Proto muckernet
-                int flag = robotController.getFlag(robot.getID());
-                if (Flags.getFlagType(flag) == Flags.Type.ENEMY_EC_FOUND) {
-                    final int[] coords = Flags.getEnemyECFoundInfo(flag);
-                    enemyEC = coordinateSystem.toAbsolute(coords[0], coords[1]);
-                    setEnemyHQFlag(enemyEC);
-                    return true;
-                }
             }
         }
+
+        final Optional<MapLocation> maybeEnemyEC = checkCommsForEnemyEC();
+        if (maybeEnemyEC.isPresent() && robotController.getID() % 2 == 0) {
+            enemyEC = maybeEnemyEC.get();
+            setEnemyHQFlag(enemyEC);
+            return true;
+        }
+
         return false;
     }
 
+    // TODO: Noah, refactor as you see fit; I'm just guessing here
+    private Optional<MapLocation> checkCommsForEnemyEC() throws GameActionException {
+        if (robotController.canGetFlag(parent.ID)) {
+            final int parentFlag = robotController.getFlag(parent.ID);
+            if (Flags.getFlagType(parentFlag) == Type.ENEMY_EC_FOUND) {
+                Logging.log("Discovered enemy EC location from home base");
+
+                final int[] coords = Flags.getAttackEnemyECInfo(parentFlag);
+                if (Logging.LOGGING) {
+                    System.out.println("X: " + coords[0]);
+                    System.out.println("Y: " + coords[1]);
+                }
+                return Optional.of(coordinateSystem.toAbsolute(coords[0], coords[1]));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+
     private void setEnemyHQFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if ( Logging.LOGGING ) {
+        if (Logging.LOGGING) {
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
         robotController.setFlag(Flags.encodeEnemyECFoundFlag(coords[0], coords[1]));
@@ -250,7 +275,7 @@ public class MuckrackerV2 implements Robot{
 
     private void setNeutralECFlag(MapLocation location, int conviction) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if ( Logging.LOGGING ) {
+        if (Logging.LOGGING) {
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
 
@@ -311,7 +336,7 @@ public class MuckrackerV2 implements Robot{
     }
 
     private void electricSlide() throws GameActionException {
-        if (scanDirCount >=20) {
+        if (scanDirCount >= 20) {
             switch (lastVerticalScanDir) {
                 case NORTH:
                     System.out.println("last scan " + lastVerticalScanDir);
@@ -326,8 +351,8 @@ public class MuckrackerV2 implements Robot{
             //We move so we don't miss an action before the yield in run.
             Pathfinding.moveNoYield(scanDir, robotController);
             scanDirCount = 0;
-        // if we hit the edge of the map, we need to swap the translation direction
-        } else if (!robotController.onTheMap(robotController.getLocation().translate(scanDir.dx*3, scanDir.dy*3))) {
+            // if we hit the edge of the map, we need to swap the translation direction
+        } else if (!robotController.onTheMap(robotController.getLocation().translate(scanDir.dx * 3, scanDir.dy * 3))) {
             goEast = !goEast;
             scanDir = goEast ? Direction.EAST : Direction.WEST;
             scanDirCount = -10;
@@ -399,7 +424,7 @@ public class MuckrackerV2 implements Robot{
      */
     private void hunt() throws GameActionException {
         MapLocation closestSland = closestSlandererToHunt();
-        if ( closestSland != null && Directions.distanceTo(closestSland, robotController.getLocation()) <= ACTION_R2) {
+        if (closestSland != null && Directions.distanceTo(closestSland, robotController.getLocation()) <= ACTION_R2) {
             if (robotController.canExpose(closestSland)) {
                 robotController.expose(closestSland);
             } else {
@@ -447,7 +472,7 @@ public class MuckrackerV2 implements Robot{
 
     private void setEnemySlandFlag(MapLocation location) throws GameActionException {
         final int[] coords = coordinateSystem.toRelative(location);
-        if ( Logging.LOGGING ) {
+        if (Logging.LOGGING) {
             System.out.println(String.format("Found enemy HQ at relative coords: %s, %s", coords[0], coords[1]));
         }
         robotController.setFlag(Flags.encodeEnemySladererFoundFlag(coords[0], coords[1]));
@@ -458,7 +483,7 @@ public class MuckrackerV2 implements Robot{
         Direction clearDir = Directions.getRandomDirection();
         for (int i = 0; i < 10; i++) {
             Pathfinding.moveNoYield(clearDir, robotController);
-            for (int j  = 0; j < robotController.getCooldownTurns(); j++) {
+            for (int j = 0; j < robotController.getCooldownTurns(); j++) {
                 Clock.yield();
             }
         }

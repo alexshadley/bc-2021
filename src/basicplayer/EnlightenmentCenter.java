@@ -16,8 +16,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-//TODO: Alex, is there a way to set a flag so the muckrackers know where to go?
-// Checkout line 219 in seesEnemyHQ
 public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
@@ -72,6 +70,44 @@ public class EnlightenmentCenter implements Robot {
                 currentOption = (currentOption + 1) % options.size();
                 unitsOfOptionMade = 0;
                 return next(ecInfluence);
+            }
+        }
+    }
+
+    // TODO: find a more general abstraction that works here
+    private static class FlagCycler {
+        private boolean isAttackEnemyEC = false;
+
+        Optional<Integer> enemyECFoundFlag = Optional.empty();
+        Optional<Integer> attackEnemyECFlag = Optional.empty();
+
+        public void setEnemyECFoundFlag(final Integer enemyECFoundFlag) {
+            this.enemyECFoundFlag = Optional.of(enemyECFoundFlag);
+        }
+
+        public void clearEnemyECFoundFlag() {
+            this.enemyECFoundFlag = Optional.empty();
+        }
+
+        public void setAttackEnemyECFlag(final Integer attackEnemyECFlag) {
+            this.attackEnemyECFlag = Optional.of(attackEnemyECFlag);
+        }
+
+        public void clearAttackEnemyECFlag() {
+            this.attackEnemyECFlag = Optional.empty();
+        }
+
+        public Optional<Integer> next() {
+            isAttackEnemyEC = !isAttackEnemyEC;
+
+            if (isAttackEnemyEC) {
+                return attackEnemyECFlag.isPresent()
+                    ? attackEnemyECFlag
+                    : enemyECFoundFlag;
+            } else {
+                return enemyECFoundFlag.isPresent()
+                    ? enemyECFoundFlag
+                    : attackEnemyECFlag;
             }
         }
     }
@@ -161,6 +197,9 @@ public class EnlightenmentCenter implements Robot {
     private Set<MapLocation> neutralECs = new HashSet<>();
     private Optional<MapLocation> targetEC = Optional.empty();
 
+    // allows cycling of multiple flags
+    private final FlagCycler flagCycler = new FlagCycler();
+
     // has a value if we want to make something but don't have influence yet. Otherwise null
     private TypeAndInfluence nextToBuild;
 
@@ -190,10 +229,17 @@ public class EnlightenmentCenter implements Robot {
                 }
             }
 
-
             buildRobot();
 
             bid();
+
+            flagCycler.next().ifPresent(flag -> {
+                try {
+                    rc.setFlag(flag);
+                } catch (GameActionException e) {
+                    e.printStackTrace();
+                }
+            });
 
             Clock.yield();
         }
@@ -259,7 +305,8 @@ public class EnlightenmentCenter implements Robot {
         targetEC = Optional.of(target);
 
         final int[] attackCoords = coordinateSystem.toRelative(target);
-        rc.setFlag(Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
+        flagCycler.setAttackEnemyECFlag(
+            Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
     }
 
     private void targetEnemy() throws GameActionException {
@@ -272,7 +319,8 @@ public class EnlightenmentCenter implements Robot {
         targetEC = Optional.of(target);
 
         final int[] attackCoords = coordinateSystem.toRelative(target);
-        rc.setFlag(Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
+        flagCycler.setAttackEnemyECFlag(
+            Flags.encodeAttackEnemyECFlag(attackCoords[0], attackCoords[1]));
     }
 
     private void checkCommunications() throws GameActionException {
@@ -289,6 +337,10 @@ public class EnlightenmentCenter implements Robot {
                     if (mode == ECMode.SCOUTING) {
                         mode = ECMode.BUILDING;
                     }
+
+                    // relay flag to our muckrakers so they can go choke it
+                    flagCycler.setEnemyECFoundFlag(flag);
+
                 } else if (Flags.getFlagType(flag) == Type.NEUTRAL_EC) {
                     final int[] coords = Flags.getNeutralECFoundInfo(flag);
                     neutralECs.add(coordinateSystem.toAbsolute(coords[0], coords[1]));
