@@ -48,6 +48,13 @@ public class Logging {
     }
 
     /**
+     * Generic Logging method with no level
+     */
+    public static void log( String msg ) {
+        log( LogLevel.NOTSET, msg );
+    }
+
+    /**
      * Debug log
      */
     public static void debug( String msg ) {
