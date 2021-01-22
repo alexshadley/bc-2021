@@ -3,7 +3,7 @@ package basicplayer;
 public class Logging {
 
     // Logging def - toggle to display all log messages
-    public static final boolean ENABLED = false;
+    public static final boolean ENABLED = true;
 
     // Add this flag as an or stmt below to always log certain level
     public static final boolean ALWAYS = true;

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class EnlightenmentCenter implements Robot {
     static final RobotType[] spawnableRobot = {
@@ -26,18 +27,10 @@ public class EnlightenmentCenter implements Robot {
     private static class TypeAndInfluence {
         public final RobotType robotType;
         public final int influence;
-        public final Direction direction;
 
         public TypeAndInfluence(final RobotType robotType, final int influence) {
             this.robotType = robotType;
             this.influence = influence;
-            this.direction = Direction.CENTER;
-        }
-
-        public TypeAndInfluence(final RobotType robotType, final int influence, final Direction direction) {
-            this.robotType = robotType;
-            this.influence = influence;
-            this.direction = direction;
         }
     }
 
@@ -167,14 +160,14 @@ public class EnlightenmentCenter implements Robot {
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 130),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.EAST),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.WEST),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTH),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTH),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTHWEST),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTHEAST),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTHEAST),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTHWEST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.POLITICIAN, Politician.GUARD_POLITICAN_SIZE),
         new TypeAndInfluence(RobotType.SLANDERER, 40),
         new TypeAndInfluence(RobotType.SLANDERER, 40)
@@ -210,6 +203,8 @@ public class EnlightenmentCenter implements Robot {
 
     // has a value if we want to make something but don't have influence yet. Otherwise null
     private TypeAndInfluence nextToBuild;
+
+    private final Set<Direction> directionsToCreateScouts = new HashSet<>(Arrays.asList(Directions.directions));
 
     public EnlightenmentCenter(final RobotController rc) {
         this.rc = rc;
@@ -277,9 +272,9 @@ public class EnlightenmentCenter implements Robot {
         }
 
         boolean unitBuilt = false;
-        final Direction[] directionsToTry = next.direction == Direction.CENTER
-            ? Direction.allDirections()
-            : new Direction[] {next.direction};
+        final Direction[] directionsToTry = !directionsToCreateScouts.isEmpty() && next.robotType == RobotType.MUCKRAKER
+            ? directionsToCreateScouts.stream().toArray(Direction[]::new)
+            : Direction.allDirections();
         for (final Direction dir : directionsToTry) {
             if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
                 final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
@@ -287,6 +282,7 @@ public class EnlightenmentCenter implements Robot {
                 robotCount++;
                 if (next.robotType == RobotType.MUCKRAKER) {
                     scouts.add(robotId);
+                    directionsToCreateScouts.remove(dir);
                 } else if (next.robotType == RobotType.POLITICIAN
                     && next.influence != Politician.GUARD_POLITICAN_SIZE) {
 
