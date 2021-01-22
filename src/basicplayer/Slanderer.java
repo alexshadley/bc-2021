@@ -26,6 +26,9 @@ public class Slanderer implements Robot {
 
     private Direction runningDirection;
 
+    private final int HIT_LIMIT = 50;
+    private int hitCount;
+
     /**
      * Constructor for Slanderer
      * 
@@ -36,7 +39,8 @@ public class Slanderer implements Robot {
         this.parent = parent;
 
         planner = new Planner( robotController );
-        runningDirection = Directions.getRandomDirection();
+        runningDirection = parent.getLocation().directionTo( robotController.getLocation() );
+        hitCount = 0;
     }
 
     /**
@@ -46,9 +50,7 @@ public class Slanderer implements Robot {
         while ( true ) {
             // if we've become a politician, switch to that code
             if (robotController.getType() == RobotType.POLITICIAN) {
-                if ( Logging.LOGGING ) {
-                    System.out.println("I've become a politican, transitioning");
-                }
+                Logging.info( "I've become a politican, transitioning" );
                 final Politician politician = new Politician(robotController, parent);
                 politician.run();
                 return;
@@ -62,8 +64,7 @@ public class Slanderer implements Robot {
                 // Yield
                 Clock.yield();
             } catch ( Exception e ) {
-                System.out.println( robotController.getType() + " Exception: " + e.getMessage() );
-                e.printStackTrace();
+                Logging.error( robotController.getType() + " Exception: " + e.getMessage() );
             }
         }
     }
@@ -99,10 +100,41 @@ public class Slanderer implements Robot {
         if ( null != enemyLocation ) {
             Direction movementDir = currLocation.directionTo( enemyLocation );
             runningDirection = movementDir.opposite();
+            hitCount = 0;
         } else {
-            runningDirection = Directions.getRandomDirection();
+            hitCount++;
+        }
+
+        if ( hitCount > HIT_LIMIT ) {
+            runningDirection = getFleeDirection();
+            hitCount = 0;
         }
         
-        planner.move( runningDirection );
+        planner.move( planner.getNextDirection( runningDirection ) );
+    }
+
+    /**
+     * Get best flee direction
+     *
+     * @return Direction to flee
+     * @throws GameActionException
+     */
+    private Direction getFleeDirection() throws GameActionException {
+        // Loop through adjacent tiles and find best direction to move in
+        Direction bestDirection = Direction.CENTER;
+        double minCost = 1.0 / 0.1;
+
+        for ( Direction dir : Directions.directions ) {
+            MapLocation adjLoc = robotController.adjacentLocation( dir );
+            if ( robotController.onTheMap( adjLoc ) ) {
+                double cost = 1.0 / robotController.sensePassability( adjLoc );
+                if ( cost < minCost ) {
+                    minCost = cost;
+                    bestDirection = dir;
+                }
+            }
+        }
+
+        return ( bestDirection );
     }
 }

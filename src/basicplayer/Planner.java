@@ -32,11 +32,26 @@ public class Planner {
     }
 
     /**
+     * Try and get best next direction to move by one in direction specified
+     *
+     * @param direction Direction to try to move towards
+     * @return direction to move in
+     * @throws GameActionException
+     */
+    public Direction getNextDirection( Direction direction ) throws GameActionException {
+        MapLocation newLocation = robotController.getLocation().add( direction );
+        Direction nextDirection = getNextDirection( newLocation );
+
+        return ( nextDirection );
+    }
+
+    /**
      * Try and get best next direction to get to final destination
      *
      * @return Best direction to move to reach goal
      * @throws GameActionException
      */
+    // TODO: make this for direction too and just call this func with location +1 in dir?
     public Direction getNextDirection( MapLocation destination ) throws GameActionException {
         // Default to CENTER
         Direction nextDirection = Direction.CENTER;

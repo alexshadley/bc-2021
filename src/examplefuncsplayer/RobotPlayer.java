@@ -1,6 +1,5 @@
 package examplefuncsplayer;
 import battlecode.common.*;
-import basicplayer.Logging;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -37,9 +36,7 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        if ( Logging.LOGGING ) {
-            System.out.println("I'm a " + rc.getType() + " and I just got created!");
-        }
+        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         
         while (true) {
             turnCount += 1;
@@ -47,9 +44,7 @@ public strictfp class RobotPlayer {
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You may rewrite this into your own control structure if you wish.
-                if ( Logging.LOGGING ) {
-                    System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
-                }
+                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 
                 switch (rc.getType()) {
                     case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
@@ -85,30 +80,19 @@ public strictfp class RobotPlayer {
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            if ( Logging.LOGGING ) {
-                System.out.println("empowering...");
-            }
-
+            System.out.println("empowering...");
             rc.empower(actionRadius);
-            
-            if ( Logging.LOGGING ) {
-                System.out.println("empowered");
-            }
-
+            System.out.println("empowered");
             return;
         }
         if (tryMove(randomDirection())) {
-            if ( Logging.LOGGING ) {
-                System.out.println("I moved!");
-            }
+            System.out.println("I moved!");
         }
     }
 
     static void runSlanderer() throws GameActionException {
         if (tryMove(randomDirection())) {
-            if ( Logging.LOGGING ) {
-                System.out.println("I moved!");
-            }
+            System.out.println("I moved!");
         }
     }
 
@@ -119,19 +103,14 @@ public strictfp class RobotPlayer {
             if (robot.type.canBeExposed()) {
                 // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) {
-                    if ( Logging.LOGGING ) {
-                        System.out.println("e x p o s e d");
-                    }
-
+                    System.out.println("e x p o s e d");
                     rc.expose(robot.location);
                     return;
                 }
             }
         }
         if (tryMove(randomDirection())) {
-            if ( Logging.LOGGING ) {
-                System.out.println("I moved!");
-            }
+            System.out.println("I moved!");
         }
     }
 
@@ -161,9 +140,7 @@ public strictfp class RobotPlayer {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        if ( Logging.LOGGING ) {
-            System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        }
+        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
 
         if (rc.canMove(dir)) {
             rc.move(dir);
