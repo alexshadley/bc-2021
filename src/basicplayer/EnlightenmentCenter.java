@@ -26,10 +26,18 @@ public class EnlightenmentCenter implements Robot {
     private static class TypeAndInfluence {
         public final RobotType robotType;
         public final int influence;
+        public final Direction direction;
 
         public TypeAndInfluence(final RobotType robotType, final int influence) {
             this.robotType = robotType;
             this.influence = influence;
+            this.direction = Direction.CENTER;
+        }
+
+        public TypeAndInfluence(final RobotType robotType, final int influence, final Direction direction) {
+            this.robotType = robotType;
+            this.influence = influence;
+            this.direction = direction;
         }
     }
 
@@ -159,14 +167,14 @@ public class EnlightenmentCenter implements Robot {
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
         new TypeAndInfluence(RobotType.SLANDERER, 130),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
-        new TypeAndInfluence(RobotType.MUCKRAKER, 1),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.EAST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.WEST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTH),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTH),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTHWEST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.NORTHEAST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTHEAST),
+        new TypeAndInfluence(RobotType.MUCKRAKER, 1, Direction.SOUTHWEST),
         new TypeAndInfluence(RobotType.POLITICIAN, Politician.GUARD_POLITICAN_SIZE),
         new TypeAndInfluence(RobotType.SLANDERER, 40),
         new TypeAndInfluence(RobotType.SLANDERER, 40)
@@ -271,7 +279,10 @@ public class EnlightenmentCenter implements Robot {
         }
 
         boolean unitBuilt = false;
-        for (final Direction dir : Direction.allDirections()) {
+        final Direction[] directionsToTry = next.direction == Direction.CENTER
+            ? Direction.allDirections()
+            : new Direction[] {next.direction};
+        for (final Direction dir : directionsToTry) {
             if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
                 final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
                 myRobots[robotCount] = robotId;
