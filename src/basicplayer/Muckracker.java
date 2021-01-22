@@ -14,9 +14,7 @@ import java.util.ArrayList;
  * Detect r^2: 40
  */
 @Deprecated
-public class Muckracker implements Robot {
-    private final RobotController robotController;
-
+public class Muckracker extends Robot implements RobotInterface {
     //Could be enum in the future
     private static enum MuckMode {
         SCOUT,
@@ -42,13 +40,13 @@ public class Muckracker implements Robot {
     Team enemyTeam = null;
 
     public Muckracker(RobotController robotController, Team enemyTeam, RobotInfo parent, Direction scoutDir) {
-        this.robotController = robotController;
+        super( robotController );
         this.enemyTeam = enemyTeam;
         this.parent = parent;
         this.mode = MuckMode.SCOUT;
         this.scoutDir = scoutDir;
 
-        planner = new Planner( robotController );
+        planner = new Planner( this );
 
         if (parent != null)
             this.coordinateSystem = new CoordinateSystem(parent.location);

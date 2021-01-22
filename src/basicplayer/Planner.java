@@ -11,11 +11,11 @@ import battlecode.common.RobotController;
  * Planner class for slightly advanced pathfinding
  */
 public class Planner {
-    // Number of adjacent tiles
-    private final int NUM_ADJACENT = 8;
-
     // Min heap to get best next tile
-    private PriorityQueue<Location> locations;
+    private PriorityQueue<? extends Location> locations;
+
+    // Robot instance
+    private final Robot robot;
 
     // Robot controller
     private final RobotController robotController;
@@ -23,12 +23,21 @@ public class Planner {
     /**
      * Constructor to initialize planner with surrounding tiles
      */
-    public Planner( RobotController robotController ) {
-        // Set robot controller
-        this.robotController = robotController;
+    public Planner( Robot robot ) {
+        // Set robot instance
+        this.robot = robot;
 
-        // Initialize priority queue with surrounding tiles
-        locations = new PriorityQueue<Location>( NUM_ADJACENT, new LocationComparator() );
+        // Set robot controller
+        robotController = robot.robotController;
+
+        // Initialize priority queue
+        locations = new PriorityQueue<>();
+    }
+
+    public Direction getNextDirection() throws GameActionException {
+        locations = robot.getAdjLocations();
+        
+        return ( findBestDirection() );
     }
 
     /**
@@ -39,8 +48,8 @@ public class Planner {
      * @throws GameActionException
      */
     public Direction getNextDirection( Direction direction ) throws GameActionException {
-        MapLocation newLocation = robotController.getLocation().add( direction );
-        Direction nextDirection = getNextDirection( newLocation );
+        MapLocation destination = robotController.getLocation().add( direction );
+        Direction nextDirection = getNextDirection( destination );
 
         return ( nextDirection );
     }
@@ -51,28 +60,15 @@ public class Planner {
      * @return Best direction to move to reach goal
      * @throws GameActionException
      */
-    // TODO: make this for direction too and just call this func with location +1 in dir?
     public Direction getNextDirection( MapLocation destination ) throws GameActionException {
+        locations = robot.getAdjLocations( destination );
+
+        return ( findBestDirection() );
+    }
+
+    private Direction findBestDirection() {
         // Default to CENTER
         Direction nextDirection = Direction.CENTER;
-
-        // TODO: this is because Mukraker plans with null destination... need to fix that root cause I think
-        if ( null == destination ) {
-            return ( nextDirection );
-        } 
-        
-
-        if ( locations.isEmpty() ) {
-            // Add adjacent robot tiles to queue
-            for ( Direction direction : Directions.directions ) {
-                MapLocation adjLoc = robotController.adjacentLocation( direction );
-                if ( robotController.onTheMap( adjLoc ) ) {
-                    double passability = robotController.sensePassability( adjLoc );
-                    double distance = adjLoc.distanceSquaredTo( destination );
-                    locations.add( new Location( adjLoc, passability, distance ) );
-                }
-            }
-        }
 
         // Loop through adjacent locations to find 
         while ( false == locations.isEmpty() ) {
@@ -97,14 +93,9 @@ public class Planner {
     public boolean move( Direction direction ) throws GameActionException {
         boolean hasMoved = false;
 
-        if ( Direction.CENTER == direction ) {
+        if ( robotController.canMove( direction ) ) {
+            robotController.move( direction );
             hasMoved = true;
-        } else {
-            hasMoved = Pathfinding.tryMove( direction, robotController );
-        
-            if ( hasMoved ) {
-                locations.clear();
-            }
         }
 
         return ( hasMoved );

@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public class EnlightenmentCenter implements Robot {
+public class EnlightenmentCenter extends Robot implements RobotInterface {
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
         RobotType.SLANDERER,
@@ -181,7 +181,6 @@ public class EnlightenmentCenter implements Robot {
     private static final int MED_BIDDER_THRESHOLD = 500;
     private static final int LARGE_BIDDER_THRESHOLD = 1000;
 
-    private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
     private final BidderRunner bidderRunner;
     private ECMode mode;
@@ -203,10 +202,10 @@ public class EnlightenmentCenter implements Robot {
     // has a value if we want to make something but don't have influence yet. Otherwise null
     private TypeAndInfluence nextToBuild;
 
-    public EnlightenmentCenter(final RobotController rc) {
-        this.rc = rc;
-        this.coordinateSystem = new CoordinateSystem(rc.getLocation());
-        this.bidderRunner = new BidderRunner(rc.getTeamVotes());
+    public EnlightenmentCenter(final RobotController robotController) {
+        super( robotController );
+        this.coordinateSystem = new CoordinateSystem(robotController.getLocation());
+        this.bidderRunner = new BidderRunner(robotController.getTeamVotes());
         this.mode = ECMode.SCOUTING;
     }
 
@@ -216,7 +215,7 @@ public class EnlightenmentCenter implements Robot {
             checkCommunications();
 
             // start rush if we're past rush turn and not yet rushing
-            if (rc.getRoundNum() >= MAGIC_RUSH_TURN && mode != ECMode.RUSHING) {
+            if (robotController.getRoundNum() >= MAGIC_RUSH_TURN && mode != ECMode.RUSHING) {
                 mode = ECMode.RUSHING;
             }
 
@@ -235,7 +234,7 @@ public class EnlightenmentCenter implements Robot {
 
             flagCycler.next().ifPresent(flag -> {
                 try {
-                    rc.setFlag(flag);
+                    robotController.setFlag(flag);
                 } catch (GameActionException e) {
                     e.printStackTrace();
                 }
@@ -246,23 +245,23 @@ public class EnlightenmentCenter implements Robot {
     }
 
     private void bid() {
-        final int influence = rc.getInfluence();
+        final int influence = robotController.getInfluence();
 
         if (influence < SMALL_BIDDER_THRESHOLD) {
-            bidderRunner.attemptBid(rc, constantBidder);
+            bidderRunner.attemptBid(robotController, constantBidder);
         } else if (influence < MED_BIDDER_THRESHOLD) {
-            bidderRunner.attemptBid(rc, smallAdaptiveBidder);
+            bidderRunner.attemptBid(robotController, smallAdaptiveBidder);
         } else if (influence < LARGE_BIDDER_THRESHOLD) {
-            bidderRunner.attemptBid(rc, mediumAdaptiveBidder);
+            bidderRunner.attemptBid(robotController, mediumAdaptiveBidder);
         } else {
-            bidderRunner.attemptBid(rc, largeAdaptiveBidder);
+            bidderRunner.attemptBid(robotController, largeAdaptiveBidder);
         }
     }
 
     private void buildRobot() throws GameActionException {
         final TypeAndInfluence next;
         if (nextToBuild == null) {
-            next = getRobotToBuild(robotCount, rc.getInfluence());
+            next = getRobotToBuild(robotCount, robotController.getInfluence());
             Logging.info( "Will build " + next.robotType + " at " + next.influence );
         } else {
             next = nextToBuild;
@@ -270,8 +269,8 @@ public class EnlightenmentCenter implements Robot {
 
         boolean unitBuilt = false;
         for (final Direction dir : Direction.allDirections()) {
-            if (rc.canBuildRobot(next.robotType, dir, next.influence)) {
-                final int robotId = EnlightenmentCenterUtils.buildRobot(rc, next.robotType, dir, next.influence).ID;
+            if (robotController.canBuildRobot(next.robotType, dir, next.influence)) {
+                final int robotId = EnlightenmentCenterUtils.buildRobot(robotController, next.robotType, dir, next.influence).ID;
                 myRobots[robotCount] = robotId;
                 robotCount++;
                 if (next.robotType == RobotType.MUCKRAKER) {
@@ -325,7 +324,7 @@ public class EnlightenmentCenter implements Robot {
         final Set<Integer> deadScouts = new HashSet<>();
         for (final int id : scouts) {
             try {
-                final int flag = rc.getFlag(id);
+                final int flag = robotController.getFlag(id);
 
                 if (Flags.getFlagType(flag) == Type.ENEMY_EC_FOUND) {
                     final int[] coords = Flags.getEnemyECFoundInfo(flag);
@@ -361,12 +360,12 @@ public class EnlightenmentCenter implements Robot {
         if (targetEC.isPresent()) {
             final Set<Integer> deadPols = new HashSet<>();
             for (final int id : attackPols) {
-                if (!rc.canGetFlag(id)) {
+                if (!robotController.canGetFlag(id)) {
                     deadPols.add(id);
                     continue;
                 }
 
-                final int flag = rc.getFlag(id);
+                final int flag = robotController.getFlag(id);
                 // TODO: fix this quick fix targetEC.isPresent()
                 if (Flags.getFlagType(flag) == Type.EC_TAKEN && targetEC.isPresent()) {
                     // target will exist in one but not both
@@ -382,7 +381,7 @@ public class EnlightenmentCenter implements Robot {
     }
 
     private TypeAndInfluence getRobotToBuild(final int robotCount, final int ecInfluence) {
-        if (rc.getRoundNum() >= MAGIC_ONLY_VOTE_TURN) {
+        if (robotController.getRoundNum() >= MAGIC_ONLY_VOTE_TURN) {
             return onlyVoteTypeDecider.next(ecInfluence);
         }
 

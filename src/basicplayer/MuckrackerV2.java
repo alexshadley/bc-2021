@@ -21,14 +21,13 @@ import java.util.Optional;
  * - Integrated Van-Helsing instincts when hunting slanderers // TODO
  * - Training from the nations top bloodhounds to find baddies // TODO
  */
-public class MuckrackerV2 implements Robot {
+public class MuckrackerV2 extends Robot implements RobotInterface {
 
     private static final int ACTION_R2 = 12;
     private static final int SENSOR_R2 = 40;
     private static final int DETECT_R2 = 30;
 
     private MuckMode mode;
-    private final RobotController robotController;
     private final Team enemyTeam;
     private final RobotInfo parent;
     private final Direction scoutDir;
@@ -49,8 +48,8 @@ public class MuckrackerV2 implements Robot {
     }
 
     public MuckrackerV2(RobotController robotController, Team enemyTeam, RobotInfo parent) {
+        super( robotController );
         this.mode = MuckMode.SCOUT;
-        this.robotController = robotController;
         this.enemyTeam = enemyTeam;
         this.parent = parent;
 

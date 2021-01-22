@@ -1,5 +1,9 @@
 package basicplayer;
 
+import java.util.PriorityQueue;
+import java.util.List;
+import java.util.ArrayList;
+
 import battlecode.common.*;
 
 /**
@@ -14,8 +18,7 @@ import battlecode.common.*;
  * Sensor r^2: 20
  * Detect r^2: 20
  */
-public class Slanderer implements Robot {
-    private final RobotController robotController;
+public class Slanderer extends Robot implements RobotInterface {
     private final RobotInfo parent;
 
     private static final int ACTION_R2 = 0;
@@ -23,11 +26,7 @@ public class Slanderer implements Robot {
     private static final int DETECT_R2 = 20;
 
     private Planner planner;
-
-    private Direction runningDirection;
-
-    private final int HIT_LIMIT = 50;
-    private int hitCount;
+    private Team enemy;
 
     /**
      * Constructor for Slanderer
@@ -35,12 +34,11 @@ public class Slanderer implements Robot {
      * @param robotController controller for current slanderer
      */
     public Slanderer(final RobotController robotController, final RobotInfo parent) {
-        this.robotController = robotController;
+        super( robotController );
         this.parent = parent;
 
-        planner = new Planner( robotController );
-        runningDirection = parent.getLocation().directionTo( robotController.getLocation() );
-        hitCount = 0;
+        planner = new Planner( this );
+        enemy = robotController.getTeam().opponent();
     }
 
     /**
@@ -58,7 +56,7 @@ public class Slanderer implements Robot {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
-                // Try and run from enemies
+                // Try and run from enemies and ECs
                 flee();
 
                 // Yield
@@ -76,65 +74,35 @@ public class Slanderer implements Robot {
      * @throws GameActionException
      */
     private void flee() throws GameActionException {
-        // Current location
-        MapLocation currLocation = robotController.getLocation();
-
-        // Enemy and detection radius
-        Team enemy = robotController.getTeam().opponent();
-        
-        // Minimum distance and location for closest enemy
-        double minDistance = Double.POSITIVE_INFINITY;
-        MapLocation enemyLocation = null;
-
-        // Find closest enemy
-        for ( RobotInfo robot : robotController.senseNearbyRobots( SENSOR_R2, enemy ) ) {
-            // Is this the closest enemy?
-            int distance = currLocation.distanceSquaredTo( robot.getLocation() );
-            if ( distance < minDistance ) {
-                minDistance = distance;
-                enemyLocation = robot.getLocation();
-            }
-        }
-
-        // Try to move in opposite direction
-        if ( null != enemyLocation ) {
-            Direction movementDir = currLocation.directionTo( enemyLocation );
-            runningDirection = movementDir.opposite();
-            hitCount = 0;
-        } else {
-            hitCount++;
-        }
-
-        if ( hitCount > HIT_LIMIT ) {
-            runningDirection = getFleeDirection();
-            hitCount = 0;
-        }
-        
-        planner.move( planner.getNextDirection( runningDirection ) );
+        planner.move( planner.getNextDirection() );
     }
 
-    /**
-     * Get best flee direction
-     *
-     * @return Direction to flee
-     * @throws GameActionException
-     */
-    private Direction getFleeDirection() throws GameActionException {
-        // Loop through adjacent tiles and find best direction to move in
-        Direction bestDirection = Direction.CENTER;
-        double minCost = 1.0 / 0.1;
+    // TODO: make classes better and move comparators to compareTo in locations also make this void and try just adding to it instead of making new queue. Also make this conditionally clear so we don't re add if we don't move plz
+    @Override
+    protected PriorityQueue<? extends Location> getAdjLocations() throws GameActionException {
+        PriorityQueue<FleeLocation> locations = new PriorityQueue<FleeLocation>( NUM_ADJACENT, new LocationComparator() );
 
-        for ( Direction dir : Directions.directions ) {
-            MapLocation adjLoc = robotController.adjacentLocation( dir );
+        List<MapLocation> enlightenmentCenters = new ArrayList<MapLocation>();
+        List<MapLocation> enemies = new ArrayList<MapLocation>();
+
+        for ( RobotInfo robot : robotController.senseNearbyRobots( SENSOR_R2 ) ) {
+            if ( RobotType.ENLIGHTENMENT_CENTER == robot.getType() ) {
+                enlightenmentCenters.add( robot.getLocation() );
+            } else if ( enemy == robot.getTeam() ) {
+                enemies.add( robot.getLocation() );
+            }
+        }
+        
+        for ( Direction direction : Directions.directions ) {
+            MapLocation adjLoc = robotController.adjacentLocation( direction );
+
             if ( robotController.onTheMap( adjLoc ) ) {
-                double cost = 1.0 / robotController.sensePassability( adjLoc );
-                if ( cost < minCost ) {
-                    minCost = cost;
-                    bestDirection = dir;
-                }
+                double passability = robotController.sensePassability( adjLoc );
+
+                locations.add( new FleeLocation( adjLoc, passability, enemies, enlightenmentCenters ) );
             }
         }
 
-        return ( bestDirection );
+        return ( locations );
     }
 }

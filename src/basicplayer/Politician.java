@@ -10,7 +10,7 @@ import battlecode.common.RobotType;
 import battlecode.common.Team;
 import java.util.Arrays;
 
-public class Politician implements Robot {
+public class Politician extends Robot implements RobotInterface {
     public static final int GUARD_POLITICAN_SIZE = 30;
 
     private static final int ACTION_R2 = RobotType.POLITICIAN.actionRadiusSquared;
@@ -27,7 +27,6 @@ public class Politician implements Robot {
         GUARD
     }
 
-    private final RobotController rc;
     private final CoordinateSystem coordinateSystem;
     private final RobotInfo parent;
     private final PoliticanType type;
@@ -43,8 +42,8 @@ public class Politician implements Robot {
     private static final int TIME_TO_WAIT = 1;
     private int timeWaited = 0;
 
-    public Politician(final RobotController rc, final RobotInfo parent) {
-        this.rc = rc;
+    public Politician(final RobotController robotController, final RobotInfo parent) {
+        super( robotController );
         this.parent = parent;
 
         if (null == parent) {
@@ -54,13 +53,13 @@ public class Politician implements Robot {
         }
 
         this.mode = PoliticanMode.ROAMING;
-        this.enemy = rc.getTeam().opponent();
+        this.enemy = robotController.getTeam().opponent();
 
-        this.type = rc.getInfluence() == GUARD_POLITICAN_SIZE
+        this.type = robotController.getInfluence() == GUARD_POLITICAN_SIZE
             ? PoliticanType.GUARD
             : PoliticanType.GENERAL;
 
-        planner = new Planner(rc);
+        planner = new Planner( this );
     }
 
     /**
@@ -82,7 +81,7 @@ public class Politician implements Robot {
                     // stop attacking (and tell our EC we won) if we find a friendly EC at the expected coords
                     if (checkIfECWon()) {
                         Logging.info( "EC won!" );
-                        rc.setFlag(Flags.encodeECTakenFlag());
+                        robotController.setFlag(Flags.encodeECTakenFlag());
                         mode = PoliticanMode.ROAMING;
                     }
 
@@ -97,7 +96,7 @@ public class Politician implements Robot {
     }
 
     private boolean checkIfECWon() {
-        final RobotInfo[] friendly = rc.senseNearbyRobots(SENSOR_R2, enemy.opponent());
+        final RobotInfo[] friendly = robotController.senseNearbyRobots(SENSOR_R2, enemy.opponent());
 
         return Arrays.stream(friendly).anyMatch(robotInfo ->
             robotInfo.type == RobotType.ENLIGHTENMENT_CENTER && robotInfo.location.equals(rushCoords));
@@ -105,7 +104,7 @@ public class Politician implements Robot {
 
     private void guard() throws GameActionException {
         // can't take any actions if cooldown too high
-        if (rc.getCooldownTurns() >= 1) {
+        if (robotController.getCooldownTurns() >= 1) {
             return;
         }
         final RobotInfo furthestMuck = furthestEnemyMuckrakerInRange();
@@ -125,13 +124,13 @@ public class Politician implements Robot {
             return;
         }
 
-        final int furthestMuckDistSquared = rc.getLocation().distanceSquaredTo(furthestMuck.location);
+        final int furthestMuckDistSquared = robotController.getLocation().distanceSquaredTo(furthestMuck.location);
 
         // see if we can attack the muckraker effectively
-        final int blastRadiusAllies = rc.senseNearbyRobots(furthestMuckDistSquared, enemy.opponent()).length;
+        final int blastRadiusAllies = robotController.senseNearbyRobots(furthestMuckDistSquared, enemy.opponent()).length;
         if (blastRadiusAllies <= 3 && timeWaited >= TIME_TO_WAIT) {
             Logging.info( "Able to attack enemy muckraker" );
-            rc.empower(furthestMuckDistSquared);
+            robotController.empower(furthestMuckDistSquared);
             return;
         } else {
             timeWaited++;
@@ -143,7 +142,7 @@ public class Politician implements Robot {
     }
 
     private RobotInfo anyMuckraker() {
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(
+        RobotInfo[] enemyRobots = robotController.senseNearbyRobots(
             RobotType.POLITICIAN.sensorRadiusSquared,
             enemy);
 
@@ -153,11 +152,11 @@ public class Politician implements Robot {
     }
 
     private RobotInfo furthestEnemyMuckrakerInRange() {
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(
+        RobotInfo[] enemyRobots = robotController.senseNearbyRobots(
             RobotType.POLITICIAN.sensorRadiusSquared,
             enemy);
 
-        final MapLocation myLocation = rc.getLocation();
+        final MapLocation myLocation = robotController.getLocation();
         RobotInfo[] enemyMuckrakers = Arrays.stream(enemyRobots)
             .filter(robot -> robot.type == RobotType.MUCKRAKER)
             .filter(robot ->
@@ -183,8 +182,8 @@ public class Politician implements Robot {
     private void checkCommunications() throws GameActionException {
         // don't check while rushing to save bytecode
         if (mode != PoliticanMode.RUSHING) {
-            if (rc.canGetFlag(parent.ID)) {
-                final int parentFlag = rc.getFlag(parent.ID);
+            if (robotController.canGetFlag(parent.ID)) {
+                final int parentFlag = robotController.getFlag(parent.ID);
                 if (Flags.getFlagType(parentFlag) == Type.ATTACK_ENEMY_EC) {
                     Logging.info( "Recieved attack orders from EC" );
                     this.mode = PoliticanMode.RUSHING;
@@ -198,14 +197,14 @@ public class Politician implements Robot {
     }
 
     private void attackIfPossible() throws GameActionException {
-        int actionRadius = rc.getType().actionRadiusSquared;
-        final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        int actionRadius = robotController.getType().actionRadiusSquared;
+        final RobotInfo[] attackable = robotController.senseNearbyRobots(actionRadius, enemy);
         if (attackable.length != 0) {
             attemptAttack(actionRadius);
             return;
         }
 
-        final RobotInfo[] neutral = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
+        final RobotInfo[] neutral = robotController.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         if (neutral.length != 0) {
             attemptAttack(actionRadius);
         }
@@ -215,16 +214,16 @@ public class Politician implements Robot {
      * Try to avoid attacking units and focus on ECs
      */
     private void rushAttack() throws GameActionException {
-        final int actionRadius = rc.getType().actionRadiusSquared;
+        final int actionRadius = robotController.getType().actionRadiusSquared;
 
         // the only neutral units are ECs, so explode if we find one
-        final RobotInfo[] neutral = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
+        final RobotInfo[] neutral = robotController.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         if (neutral.length > 0) {
             attemptAttack(actionRadius);
             return;
         }
 
-        final RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        final RobotInfo[] attackable = robotController.senseNearbyRobots(actionRadius, enemy);
         for (final RobotInfo target : attackable) {
             if (target.type == RobotType.ENLIGHTENMENT_CENTER) {
                 Logging.info( "Enemy EC found, attacking" );
@@ -240,8 +239,8 @@ public class Politician implements Robot {
     }
 
     private void attemptAttack(final int actionRadius) throws GameActionException {
-        if (rc.canEmpower(actionRadius)) {
-            rc.empower(actionRadius);
+        if (robotController.canEmpower(actionRadius)) {
+            robotController.empower(actionRadius);
         }
     }
 }

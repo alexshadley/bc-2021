@@ -7,23 +7,17 @@ import battlecode.common.MapLocation;
  */
 public class Location {
     // Map Location
-    private MapLocation location;
+    protected MapLocation location;
 
     // Passability
-    private double passability;
-
-    // Distance weight
-    private double distance;
-
-    // TODO: add corner weight
+    protected double passability;
 
     /**
      * Constructor to initialize a location
      */
-    public Location( MapLocation location, double passability, double distance ) {
+    public Location( MapLocation location, double passability ) {
         this.location = location;
         this.passability = passability;
-        this.distance = distance;
     }
 
     /**
@@ -42,14 +36,5 @@ public class Location {
      */
     public double getPassability() {
         return ( passability );
-    }
-
-    /**
-     * Get distance to destination from this location
-     *
-     * @return distance to destination from location
-     */
-    public double getDistance() {
-        return ( distance );
     }
 }

@@ -18,7 +18,7 @@ public strictfp class RobotPlayer {
             final Team enemyTeam = rc.getTeam().opponent();
             final RobotInfo parent = Startup.getParent(rc);
 
-            Robot robotCode;
+            RobotInterface robotCode;
             switch (rc.getType()) {
                 case ENLIGHTENMENT_CENTER:
                     robotCode = new EnlightenmentCenter(rc);
