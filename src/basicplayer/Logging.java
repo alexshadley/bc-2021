@@ -2,6 +2,9 @@ package basicplayer;
 
 public class Logging {
 
+    // Log level for log instances
+    private LogLevel logLevel;
+
     // Logging def - toggle to display all log messages
     public static final boolean ENABLED = false;
 
@@ -16,6 +19,22 @@ public class Logging {
 
     // Toggle this flag to display error messages
     public static final boolean LOG_ERRORS = false;
+
+    /**
+     * Constructor to create logger instance
+     */
+    public Logging() {
+        logLevel = LogLevel.NOTSET;
+    }
+
+    /**
+     * Constructor to create logger instance
+     *
+     * @param logLevel Logging level
+     */
+    public Logging( LogLevel logLevel ) {
+        this.logLevel = logLevel;
+    }
 
     /**
      * Generic Logging method
@@ -48,10 +67,10 @@ public class Logging {
     }
 
     /**
-     * Generic Logging method with no level
+     * Instance generic log
      */
-    public static void log( String msg ) {
-        log( LogLevel.NOTSET, msg );
+    public void log( String msg ) {
+        log( logLevel, msg );
     }
 
     /**
@@ -121,6 +140,13 @@ public class Logging {
      public static void force( String msg ) {
          System.out.println( "[FORCED!!!] " + msg  );
      }
+
+    /**
+     * Set instance logger log level
+     */
+    public void setLevel( LogLevel logLevel ) {
+        this.logLevel = logLevel;
+    }
 
     /**
      * Create logging message header

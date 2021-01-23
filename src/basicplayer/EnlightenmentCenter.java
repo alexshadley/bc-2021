@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class EnlightenmentCenter extends Robot implements RobotInterface {
     static final RobotType[] spawnableRobot = {
@@ -202,6 +203,8 @@ public class EnlightenmentCenter extends Robot implements RobotInterface {
     // has a value if we want to make something but don't have influence yet. Otherwise null
     private TypeAndInfluence nextToBuild;
 
+    private final Set<Direction> directionsToCreateScouts = new HashSet<>(Arrays.asList(Directions.directions));
+
     public EnlightenmentCenter(final RobotController robotController) {
         super( robotController );
         this.coordinateSystem = new CoordinateSystem(robotController.getLocation());
@@ -268,13 +271,18 @@ public class EnlightenmentCenter extends Robot implements RobotInterface {
         }
 
         boolean unitBuilt = false;
-        for (final Direction dir : Direction.allDirections()) {
+
+        final Direction[] directionsToTry = !directionsToCreateScouts.isEmpty() && next.robotType == RobotType.MUCKRAKER
+            ? directionsToCreateScouts.stream().toArray(Direction[]::new)
+            : Direction.allDirections();
+        for (final Direction dir : directionsToTry) {
             if (robotController.canBuildRobot(next.robotType, dir, next.influence)) {
                 final int robotId = EnlightenmentCenterUtils.buildRobot(robotController, next.robotType, dir, next.influence).ID;
                 myRobots[robotCount] = robotId;
                 robotCount++;
                 if (next.robotType == RobotType.MUCKRAKER) {
                     scouts.add(robotId);
+                    directionsToCreateScouts.remove(dir);
                 } else if (next.robotType == RobotType.POLITICIAN
                     && next.influence != Politician.GUARD_POLITICAN_SIZE) {
 
