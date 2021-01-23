@@ -121,7 +121,7 @@ public class EnlightenmentCenter implements Robot {
 
     private static final List<TypeAndInfluenceFunction> scoutingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
-        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 40),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> Util.getSlandererInfluenceCost(1)),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
     private static final List<Integer> scoutingFrequencies = Arrays.asList(1, 2, 5);
@@ -129,14 +129,14 @@ public class EnlightenmentCenter implements Robot {
     private static final List<TypeAndInfluenceFunction> buildingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Math.max(i / 4, 50)),
-        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> Util.getSlandererInfluenceCost(4)),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
     private static final List<Integer> buildingFrequencies = Arrays.asList(2, 1, 3, 5);
 
     private static final List<TypeAndInfluenceFunction> rushingOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Math.max(i / 4, 50)),
-        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85),
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> Util.getSlandererInfluenceCost(4)),
         new TypeAndInfluenceFunction(RobotType.MUCKRAKER, i -> 1)
     );
     private static final List<Integer> rushingFrequencies = Arrays.asList(3, 1, 1);
@@ -149,7 +149,7 @@ public class EnlightenmentCenter implements Robot {
 
     private static final List<TypeAndInfluenceFunction> onlyVoteOptions = Arrays.asList(
         new TypeAndInfluenceFunction(RobotType.POLITICIAN, i -> Politician.GUARD_POLITICAN_SIZE),
-        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> 85));
+        new TypeAndInfluenceFunction(RobotType.SLANDERER, i -> Util.getSlandererInfluenceCost(4)));
     private static final RobotTypeDecider onlyVoteTypeDecider = new RobotTypeDecider(
         onlyVoteOptions,
         Arrays.asList(2, 3)
@@ -159,7 +159,7 @@ public class EnlightenmentCenter implements Robot {
     private static final int MAGIC_ONLY_VOTE_TURN = 1000;
 
     private static final TypeAndInfluence[] startupSequence = new TypeAndInfluence[]{
-        new TypeAndInfluence(RobotType.SLANDERER, 130),
+        new TypeAndInfluence(RobotType.SLANDERER, Util.getSlandererInfluenceCost(6)),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),
         new TypeAndInfluence(RobotType.MUCKRAKER, 1),

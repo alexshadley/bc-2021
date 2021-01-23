@@ -1,8 +1,11 @@
 package basicplayer;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Utility function class
+ */
 public class Util {
     // Slanderer cost for influence return
     public static Map<Integer, Integer> slandererInfluenceCost;
