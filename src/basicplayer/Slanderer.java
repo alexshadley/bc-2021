@@ -1,10 +1,17 @@
 package basicplayer;
 
-import java.util.PriorityQueue;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.PriorityQueue;
 
-import battlecode.common.*;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
 
 /**
  * Slanderers
@@ -19,19 +26,25 @@ import battlecode.common.*;
  * Detect r^2: 20
  */
 public class Slanderer extends Robot implements RobotInterface {
+    // Parent spawner
     private final RobotInfo parent;
 
+    // Radii
     private static final int ACTION_R2 = 0;
     private static final int SENSOR_R2 = 20;
     private static final int DETECT_R2 = 20;
 
+    // Planner
     private Planner planner;
+
+    // Enemy team
     private Team enemy;
 
     /**
      * Constructor for Slanderer
      * 
      * @param robotController controller for current slanderer
+     * @param parent Robot parent
      */
     public Slanderer(final RobotController robotController, final RobotInfo parent) {
         super( robotController );
@@ -43,6 +56,8 @@ public class Slanderer extends Robot implements RobotInterface {
 
     /**
      * Main execution loop
+     *
+     * @throws GameActionException
      **/
     public void run() throws GameActionException {
         while ( true ) {
@@ -77,11 +92,13 @@ public class Slanderer extends Robot implements RobotInterface {
         planner.move( planner.getNextDirection() );
     }
 
-    // TODO: make classes better and move comparators to compareTo in locations also make this void and try just adding to it instead of making new queue. Also make this conditionally clear so we don't re add if we don't move plz
+    /**
+     * Get adjacent locations
+     *
+     * @param locations Priority queue of locations
+     */
     @Override
-    protected PriorityQueue<? extends Location> getAdjLocations() throws GameActionException {
-        PriorityQueue<FleeLocation> locations = new PriorityQueue<FleeLocation>( NUM_ADJACENT, new LocationComparator() );
-
+    protected void getAdjLocations( PriorityQueue<Location> locations ) throws GameActionException {
         List<MapLocation> enlightenmentCenters = new ArrayList<MapLocation>();
         List<MapLocation> enemies = new ArrayList<MapLocation>();
 
@@ -102,7 +119,5 @@ public class Slanderer extends Robot implements RobotInterface {
                 locations.add( new FleeLocation( adjLoc, passability, enemies, enlightenmentCenters ) );
             }
         }
-
-        return ( locations );
     }
 }

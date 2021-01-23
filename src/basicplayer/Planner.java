@@ -12,7 +12,7 @@ import battlecode.common.RobotController;
  */
 public class Planner {
     // Min heap to get best next tile
-    private PriorityQueue<? extends Location> locations;
+    private PriorityQueue<Location> locations;
 
     // Robot instance
     private final Robot robot;
@@ -22,6 +22,8 @@ public class Planner {
 
     /**
      * Constructor to initialize planner with surrounding tiles
+     *
+     * @param robot Robot instance
      */
     public Planner( Robot robot ) {
         // Set robot instance
@@ -31,11 +33,18 @@ public class Planner {
         robotController = robot.robotController;
 
         // Initialize priority queue
-        locations = new PriorityQueue<>();
+        locations = new PriorityQueue<>( 8, new LocationComparator() );
     }
 
+    /**
+     * Get next direction with no destiation
+     *
+     * @return Direction to move
+     */
     public Direction getNextDirection() throws GameActionException {
-        locations = robot.getAdjLocations();
+        if ( locations.isEmpty() ) {
+            robot.getAdjLocations( locations );
+        }
         
         return ( findBestDirection() );
     }
@@ -57,15 +66,23 @@ public class Planner {
     /**
      * Try and get best next direction to get to final destination
      *
+     * @param destination Final destination
      * @return Best direction to move to reach goal
      * @throws GameActionException
      */
     public Direction getNextDirection( MapLocation destination ) throws GameActionException {
-        locations = robot.getAdjLocations( destination );
+        if ( locations.isEmpty() ) {
+            robot.getAdjLocations( locations, destination );
+        }
 
         return ( findBestDirection() );
     }
 
+    /**
+     * Get best movable direction
+     *
+     * @return direction to move
+     */
     private Direction findBestDirection() {
         // Default to CENTER
         Direction nextDirection = Direction.CENTER;
@@ -95,6 +112,7 @@ public class Planner {
 
         if ( robotController.canMove( direction ) ) {
             robotController.move( direction );
+            locations.clear();
             hasMoved = true;
         }
 

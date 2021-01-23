@@ -37,4 +37,19 @@ public class Location {
     public double getPassability() {
         return ( passability );
     }
+
+    /**
+     * Compare locations
+     * 
+     * @return integer value
+     * < 0 : this location is less than l2
+     * = 0 : locations are equal
+     * > 0 : this location is greater than l2
+     */
+    protected int compareTo( Location l2 ) {
+        double l1Cost = 5.0 / passability;
+        double l2Cost = 5.0 / l2.getPassability();
+
+        return ( (int) ( l1Cost - l2Cost ) );
+    }
 }
